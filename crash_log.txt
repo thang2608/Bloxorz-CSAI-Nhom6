@@ -1,0 +1,10 @@
+Traceback (most recent call last):
+  File "/Users/macbook/Documents/CSAI/raylib_app.py", line 1553, in <module>
+    draw_cosmic_space_backdrop(win_w, win_h, dt)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/Users/macbook/Documents/CSAI/raylib_app.py", line 779, in draw_cosmic_space_backdrop
+    rl.draw_circle_gradient(int(w * 0.82), int(h * 0.24), r1, rl.Color(82, 26, 128, 75), rl.Color(6, 4, 16, 0))
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/anaconda3/lib/python3.13/site-packages/pyray/__init__.py", line 94, in wrapped_func
+    result = original_func(*args)
+TypeError: DrawCircleGradient expected 4 arguments, got 5

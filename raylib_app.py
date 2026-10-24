@@ -214,8 +214,8 @@ GOAL_RIM = rl.Color(0, 245, 255, 255)
 GOAL_BEAM = rl.Color(0, 235, 245, 45)
 GOAL_BEAM_WIRE = rl.Color(0, 240, 245, 140)
 
-BLOCK_COLOR = rl.Color(245, 185, 50, 255)
-BLOCK_WIRE = rl.Color(255, 240, 170, 240)
+BLOCK_COLOR = rl.Color(238, 168, 38, 255)
+BLOCK_WIRE = rl.Color(255, 218, 95, 240)
 
 MINI_ACTIVE = rl.Color(0, 240, 245, 255)
 MINI_ACTIVE_WIRE = rl.Color(180, 255, 255, 255)
@@ -240,28 +240,49 @@ camera.projection = rl.CAMERA_PERSPECTIVE
 
 spin_timer = 0.0
 
-# 80 ngôi sao vũ trụ 3D lấp lánh đa tầng sâu thị sai (Tối ưu hóa triệt để, không giật lag)
+# 140 ngôi sao vũ trụ 3D lấp lánh đa tầng sâu thị sai (Tối ưu hóa triệt để, không giật lag)
 STARS = []
-for i in range(80):
+for i in range(140):
     yaw = (i * 137.5) * (math.pi / 180.0)
-    pitch = ((i % 40) - 20) * (math.pi / 40.0)
-    dist = 38.0 + (i % 15) * 1.8
+    pitch = ((i % 50) - 25) * (math.pi / 50.0)
+    dist = 36.0 + (i % 20) * 1.6
     sx = dist * math.cos(pitch) * math.sin(yaw)
     sy = dist * math.sin(pitch)
     sz = dist * math.cos(pitch) * math.cos(yaw)
-    ssz = 0.16 + (i % 3) * 0.08
-    spd = 1.4 + (i % 4) * 0.6
-    phase = (i * 0.7) % (2.0 * math.pi)
-    base_col = (180, 240, 255) if i % 3 == 0 else ((255, 230, 160) if i % 3 == 1 else (255, 255, 255))
+    ssz = 0.14 + (i % 4) * 0.07
+    spd = 1.2 + (i % 5) * 0.5
+    phase = (i * 0.73) % (2.0 * math.pi)
+    if i % 4 == 0:
+        base_col = (175, 235, 255)  # Cyan tinh vân
+    elif i % 4 == 1:
+        base_col = (255, 225, 150)  # Vàng ánh kim
+    elif i % 4 == 2:
+        base_col = (225, 200, 255)  # Tím tử quang
+    else:
+        base_col = (255, 255, 255)  # Trắng tinh khiết
     STARS.append((sx, sy, sz, ssz, spd, phase, base_col))
 
 STAR_CACHE = []
+
+# 24 Hạt bụi sao vũ trụ 3D bồng bềnh không trọng lực quanh đảo nổi (Zero-G Cosmic Stardust)
+STARDUST_3D = []
+_rnd3 = random.Random(1337)
+for i in range(24):
+    ox = _rnd3.uniform(-4.5, 14.5)
+    oy = _rnd3.uniform(-1.5, 3.2)
+    oz = _rnd3.uniform(-4.5, 14.5)
+    spd = _rnd3.uniform(0.6, 1.5)
+    phase = _rnd3.uniform(0.0, 2.0 * math.pi)
+    col_type = i % 2
+    STARDUST_3D.append((ox, oy, oz, spd, phase, col_type))
+
+STARDUST_CACHE = []
 cached_center = (-999.0, -999.0)
 
 
 def update_star_cache_if_needed():
     """Tái sử dụng bộ đệm Vector3 của ngôi sao, triệt tiêu 100% rác bộ nhớ (GC) gây giật màn hình"""
-    global cached_center, STAR_CACHE
+    global cached_center, STAR_CACHE, STARDUST_CACHE
     center_c = (game.cols - 1) / 2.0
     center_r = (game.rows - 1) / 2.0
     if cached_center != (center_c, center_r) or not STAR_CACHE:
@@ -270,6 +291,10 @@ def update_star_cache_if_needed():
         for sx, sy, sz, ssz, spd, phase, base_col in STARS:
             star_vec = rl.Vector3(center_c + sx, sy, center_r + sz)
             STAR_CACHE.append((star_vec, ssz, spd, phase, base_col))
+        STARDUST_CACHE = []
+        for ox, oy, oz, spd, phase, col_type in STARDUST_3D:
+            dust_vec = rl.Vector3(center_c + ox, oy, center_r + oz)
+            STARDUST_CACHE.append((dust_vec, ox, oy, oz, spd, phase, col_type))
 
 
 # Hệ thống Hạt va đập (Impact Spark & Dust Particles)
@@ -316,28 +341,28 @@ def update_and_draw_particles(dt):
 
 
 def draw_starfield():
-    """Vẽ bầu trời sao vũ trụ 3D lấp lánh với bộ đệm tọa độ tối ưu mượt mà 60 FPS"""
+    """Vẽ bầu trời sao vũ trụ 3D lấp lánh và bụi sao lơ lửng với bộ đệm tọa độ tối ưu mượt mà 60 FPS"""
     update_star_cache_if_needed()
 
-    # 1. 80 Ngôi sao vũ trụ thị sai (Đã lưu sẵn Vector3 trong RAM, 0% rác GC)
+    # 1. 140 Ngôi sao vũ trụ thị sai trong không gian 3D (Đã lưu sẵn Vector3 trong RAM, 0% rác GC)
     for star_pos, ssz, spd, phase, base_col in STAR_CACHE:
         twinkle = 0.5 + 0.5 * math.sin(spin_timer * spd + phase)
-        alpha = int(120 + 135 * twinkle)
+        alpha = int(110 + 145 * twinkle)
         col = rl.Color(base_col[0], base_col[1], base_col[2], alpha)
         rl.draw_cube(star_pos, ssz, ssz, ssz, col)
 
-    # 2. 6 Đám mây tinh vân vũ trụ huyền ảo
+    # 2. 24 Hạt bụi sao vũ trụ 3D bồng bềnh không trọng lực quanh đảo nổi
     center_c = cached_center[0]
     center_r = cached_center[1]
-    for ni in range(6):
-        ang = ni * 1.04 + spin_timer * 0.04
-        ndist = 26.0 + (ni % 3) * 4.0
-        ny = -3.5 + (ni % 4) * 1.4
-        nx = center_c + ndist * math.cos(ang)
-        nz = center_r + ndist * math.sin(ang)
-        nalpha = int(22 + 12 * math.sin(spin_timer * 0.6 + ni))
-        ncol = rl.Color(30, 90, 160, nalpha) if ni % 2 == 0 else rl.Color(95, 45, 140, nalpha)
-        rl.draw_cube(rl.Vector3(nx, ny, nz), 2.2, 2.2, 2.2, ncol)
+    for dust_vec, ox, oy, oz, spd, phase, col_type in STARDUST_CACHE:
+        bob_y = oy + math.sin(spin_timer * spd + phase) * 0.28
+        dust_vec.x = center_c + ox
+        dust_vec.y = bob_y
+        dust_vec.z = center_r + oz
+        sparkle = 0.5 + 0.5 * math.sin(spin_timer * spd * 1.6 + phase)
+        alpha = int(75 + 140 * sparkle)
+        col = rl.Color(165, 240, 255, alpha) if col_type == 0 else rl.Color(255, 220, 140, alpha)
+        rl.draw_cube(dust_vec, 0.08, 0.08, 0.08, col)
 
 
 # ── Hoạt ảnh Lật Vật lý 3D quanh Cạnh Đáy (3D Edge-Pivot Tumble) ──
@@ -529,23 +554,15 @@ def perform_move(move_dir):
 
 
 def draw_deluxe_block(pos, size, color, wire_color, is_golden=True):
-    """Vẽ khối hộp kim loại vát cạnh sang trọng với bề mặt phản quang đa chiều"""
-    # 1. Khối đế kim loại chính
+    """Vẽ khối hộp kim loại vát cạnh sang trọng với bề mặt đồng nhất, sạch sẽ"""
+    # 1. Khối hộp đồng nhất màu sắc toàn bộ 6 mặt (loại bỏ hoàn toàn mảng màu vàng sáng ở giữa)
     rl.draw_cube(pos, size.x, size.y, size.z, color)
+    # 2. Khung viền vát cạnh phản quang tinh tế
     rl.draw_cube_wires(pos, size.x, size.y, size.z, wire_color)
 
-    if is_golden:
-        # 2. Tấm mạ vàng bóng gương trên mặt đỉnh (+Y)
-        top_y = pos.y + size.y * 0.49
-        top_plate_pos = rl.Vector3(pos.x, top_y, pos.z)
-        rl.draw_cube(top_plate_pos, size.x * 0.82, 0.02, size.z * 0.82, rl.Color(255, 235, 140, 240))
-        rl.draw_cube_wires(top_plate_pos, size.x * 0.82, 0.02, size.z * 0.82, rl.Color(255, 255, 220, 255))
-
-        # 3. Viền hoa văn kim loại sang trọng
-        rl.draw_cube_wires(pos, size.x * 0.90, size.y * 0.90, size.z * 0.90, rl.Color(255, 210, 70, 160))
-    else:
+    if not is_golden:
         # Khối phân thân ngọc lam đa chiều
-        rl.draw_cube_wires(pos, size.x * 0.82, size.y * 0.82, size.z * 0.82, rl.Color(220, 255, 255, 180))
+        rl.draw_cube_wires(pos, size.x * 0.88, size.y * 0.88, size.z * 0.88, rl.Color(220, 255, 255, 160))
 
 
 def draw_contact_shadow():
@@ -705,6 +722,163 @@ def draw_styled_button(rec, text, font_size=18, is_hover=False, active=False, ac
     tx = int(rec.x + rec.width / 2 - tw / 2)
     ty = int(rec.y + rec.height / 2 - font_size / 2)
     draw_text_ui(text, tx, ty, font_size, text_col, is_bold=True, shadow=True, glow=is_hover, glow_color=rl.Color(ar, ag, ab, 50))
+
+
+# ── Bầu trời Không gian Vũ trụ Sâu thẳm (Deep-Space Cosmic Backdrop & Nebulae) ──
+COSMIC_STARS_2D = []
+_rnd = random.Random(42)
+for i in range(180):
+    nx = _rnd.random()
+    ny = _rnd.random()
+    sz_rnd = _rnd.random()
+    if sz_rnd < 0.72:
+        sz = 1
+    elif sz_rnd < 0.92:
+        sz = 2
+    else:
+        sz = 3
+    spd = _rnd.uniform(1.2, 3.8)
+    phase = _rnd.uniform(0.0, 2.0 * math.pi)
+    col_t = i % 4
+    if col_t == 0:
+        base_rgb = (255, 255, 255)  # Trắng kim cương
+    elif col_t == 1:
+        base_rgb = (175, 235, 255)  # Xanh băng tinh vân
+    elif col_t == 2:
+        base_rgb = (255, 225, 150)  # Vàng ánh sao xa
+    else:
+        base_rgb = (220, 195, 255)  # Tím tử quang
+    has_flare = (sz == 3 and i % 2 == 0)
+    COSMIC_STARS_2D.append((nx, ny, sz, spd, phase, base_rgb, has_flare))
+
+shooting_star = {
+    "active": False,
+    "timer": 1.8,
+    "x": 0.0, "y": 0.0,
+    "vx": 0.0, "vy": 0.0,
+    "len": 0.0,
+    "life": 0.0,
+    "max_life": 0.0
+}
+
+
+def draw_nebula_cloud(cx, cy, radius, col1, col2):
+    """Vẽ đám mây tinh vân phát quang mềm mại tương thích chuẩn xác với cả PyRay Vector2 và C API"""
+    if hasattr(rl, "draw_circle_gradient"):
+        try:
+            # PyRay API chuẩn: 4 tham số (Vector2 center, float radius, Color inner, Color outer)
+            rl.draw_circle_gradient(rl.Vector2(float(cx), float(cy)), float(radius), col1, col2)
+        except TypeError:
+            try:
+                # Fallback C-style API: 5 tham số (int cx, int cy, float radius, Color col1, Color col2)
+                rl.draw_circle_gradient(int(cx), int(cy), float(radius), col1, col2)
+            except Exception:
+                pass
+        except Exception:
+            pass
+
+
+def draw_star_circle(x, y, radius, col):
+    """Vẽ vòng tròn phát quang hào quang sao an toàn tương thích mọi môi trường"""
+    if hasattr(rl, "draw_circle"):
+        try:
+            rl.draw_circle(int(x), int(y), float(radius), col)
+        except TypeError:
+            try:
+                rl.draw_circle(rl.Vector2(float(x), float(y)), float(radius), col)
+            except Exception:
+                pass
+        except Exception:
+            pass
+
+
+def draw_cosmic_space_backdrop(w, h, dt):
+    """Vẽ phông nền vũ trụ đa tầng với dải thiên hà, tinh vân phát quang, sao 2D lấp lánh và sao băng"""
+    global shooting_star
+
+    # 1. Gradient bầu trời không gian sâu thẳm
+    if hasattr(rl, "draw_rectangle_gradient_v"):
+        rl.draw_rectangle_gradient_v(0, 0, w, h, rl.Color(3, 5, 14, 255), rl.Color(8, 14, 28, 255))
+    else:
+        rl.draw_rectangle(0, 0, w, h, rl.Color(4, 7, 18, 255))
+
+    # 2. Các cụm mây Tinh vân Vũ trụ (Nebula Glow Clouds) huyền ảo
+    # Tinh vân tử quang huyền bí (Cosmic Magenta Nebula) ở góc trên bên phải
+    r1 = float(w * 0.44 + math.sin(spin_timer * 0.25) * 16.0)
+    draw_nebula_cloud(w * 0.82, h * 0.24, r1, rl.Color(82, 26, 128, 75), rl.Color(6, 4, 16, 0))
+
+    # Tinh vân thanh lam tinh khôi (Teal & Cyan Stellar Nursery) ở góc dưới bên trái
+    r2 = float(w * 0.40 + math.cos(spin_timer * 0.20) * 14.0)
+    draw_nebula_cloud(w * 0.16, h * 0.78, r2, rl.Color(16, 75, 108, 65), rl.Color(4, 10, 20, 0))
+
+    # Lõi ngân hà tím sẫm (Deep Galactic Core) ở trung tâm phía sau đảo nổi
+    r3 = float(w * 0.36 + math.sin(spin_timer * 0.16 + 1.0) * 10.0)
+    draw_nebula_cloud(w * 0.52, h * 0.46, r3, rl.Color(44, 22, 78, 48), rl.Color(5, 6, 16, 0))
+
+    # 3. Dải sao vũ trụ 2D đa sắc & sao phát quang chữ thập (Diffraction Spikes)
+    for nx, ny, sz, spd, phase, base_rgb, has_flare in COSMIC_STARS_2D:
+        sx = int(nx * w)
+        sy = int(ny * h)
+        twinkle = 0.42 + 0.58 * math.sin(spin_timer * spd + phase)
+        alpha = int(90 + 165 * twinkle)
+        col = rl.Color(base_rgb[0], base_rgb[1], base_rgb[2], alpha)
+
+        if sz == 1:
+            rl.draw_pixel(sx, sy, col)
+        elif sz == 2:
+            rl.draw_rectangle(sx, sy, 2, 2, col)
+        else:
+            rl.draw_rectangle(sx - 1, sy - 1, 3, 3, col)
+            if has_flare:
+                flare_a = int(alpha * 0.60)
+                f_col = rl.Color(base_rgb[0], base_rgb[1], base_rgb[2], flare_a)
+                rl.draw_pixel(sx - 2, sy, f_col)
+                rl.draw_pixel(sx + 2, sy, f_col)
+                rl.draw_pixel(sx, sy - 2, f_col)
+                rl.draw_pixel(sx, sy + 2, f_col)
+                halo_a = int(alpha * 0.14)
+                draw_star_circle(sx, sy, 5.0, rl.Color(base_rgb[0], base_rgb[1], base_rgb[2], halo_a))
+
+    # 4. Sao Băng lướt qua bầu trời vũ trụ (Cosmic Shooting Star / Meteor)
+    if not shooting_star["active"]:
+        shooting_star["timer"] -= dt
+        if shooting_star["timer"] <= 0:
+            shooting_star["active"] = True
+            shooting_star["x"] = random.uniform(w * 0.30, w * 0.95)
+            shooting_star["y"] = random.uniform(-10.0, h * 0.35)
+            spd = random.uniform(620.0, 900.0)
+            ang = math.radians(random.uniform(132.0, 152.0))
+            shooting_star["vx"] = math.cos(ang) * spd
+            shooting_star["vy"] = math.sin(ang) * spd
+            shooting_star["len"] = random.uniform(55.0, 95.0)
+            life = random.uniform(0.40, 0.65)
+            shooting_star["life"] = life
+            shooting_star["max_life"] = life
+    else:
+        shooting_star["life"] -= dt
+        shooting_star["x"] += shooting_star["vx"] * dt
+        shooting_star["y"] += shooting_star["vy"] * dt
+        prog = shooting_star["life"] / shooting_star["max_life"]
+        if prog <= 0:
+            shooting_star["active"] = False
+            shooting_star["timer"] = random.uniform(4.5, 8.0)
+        else:
+            alpha = int(255 * math.sin(prog * math.pi))
+            spd_val = math.hypot(shooting_star["vx"], shooting_star["vy"])
+            if spd_val > 0:
+                dx = (shooting_star["vx"] / spd_val) * shooting_star["len"]
+                dy = (shooting_star["vy"] / spd_val) * shooting_star["len"]
+                s_pos = rl.Vector2(float(shooting_star["x"] - dx), float(shooting_star["y"] - dy))
+                h_pos = rl.Vector2(float(shooting_star["x"]), float(shooting_star["y"]))
+                m_col = rl.Color(255, 255, 255, alpha)
+                try:
+                    if hasattr(rl, "draw_line_ex"):
+                        rl.draw_line_ex(s_pos, h_pos, 2.2, m_col)
+                    else:
+                        rl.draw_line(int(s_pos.x), int(s_pos.y), int(h_pos.x), int(h_pos.y), m_col)
+                except Exception:
+                    pass
+                draw_star_circle(h_pos.x, h_pos.y, 2.2, m_col)
 
 
 # ── 5. Hàm Vẽ Bàn cờ 3D ───────────────────────────────────────
@@ -1399,16 +1573,19 @@ while not rl.window_should_close():
                 perform_move(next_m)
 
     # ── D. Render Khung hình ──
+    win_w = rl.get_screen_width()
+    win_h = rl.get_screen_height()
+
     rl.begin_drawing()
     rl.clear_background(BG_COLOR)
+
+    # 0. Vẽ Phông nền Bầu trời Vũ trụ Huyền ảo (Nebula phát quang, Sao 2D, Sao băng)
+    draw_cosmic_space_backdrop(win_w, win_h, dt)
 
     # 1. Vẽ không gian 3D (luôn chạy nền phía sau)
     rl.begin_mode_3d(camera)
     draw_3d_scene(dt)
     rl.end_mode_3d()
-
-    win_w = rl.get_screen_width()
-    win_h = rl.get_screen_height()
 
     # 2. Vẽ Giao diện tương ứng với State
     if current_state == STATE_PLAYING:
