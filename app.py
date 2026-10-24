@@ -38,6 +38,11 @@ def move():
     game.move(direction)
     return jsonify(game.to_dict())
 
+@app.route("/api/undo", methods=["POST"])
+def undo():
+    game.undo()
+    return jsonify(game.to_dict())
+
 @app.route("/api/reset", methods=["POST"])
 def reset():
     game.reset()

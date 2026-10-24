@@ -112,7 +112,45 @@ class BloxorzGame:
         self.status = "PLAYING"    # "PLAYING", "WON", "LOST"
         self.lost_reason = None    # "FALL", "FRAGILE_BREAK", "BRIDGE_CLOSED"
         self.broken_tile = None    # [r, c] khi ô cam bị vỡ
-        self.last_event = None     # "SPLIT", "MERGE", "SWITCH_TRIGGER", None
+        self.last_event = None     # "SPLIT", "MERGE", "SWITCH_TRIGGER", "UNDO", None
+        self.history = []          # Stack lưu lịch sử để hỗ trợ Undo (Hoàn tác)
+
+    def _save_snapshot(self):
+        """Lưu lại bản sao trạng thái trước khi di chuyển để hỗ trợ Undo"""
+        snapshot = {
+            "block": copy.deepcopy(self.block),
+            "is_split": self.is_split,
+            "mini_blocks": copy.deepcopy(self.mini_blocks),
+            "active_block": self.active_block,
+            "bridges": copy.deepcopy(self.bridges),
+            "moves": self.moves,
+            "status": self.status,
+            "lost_reason": self.lost_reason,
+            "broken_tile": copy.deepcopy(self.broken_tile),
+            "last_event": self.last_event,
+        }
+        self.history.append(snapshot)
+
+    def can_undo(self):
+        """Kiểm tra có thể hoàn tác bước đi trước đó không"""
+        return len(self.history) > 0
+
+    def undo(self):
+        """Hoàn tác bước đi trước đó"""
+        if not self.history:
+            return False
+        snapshot = self.history.pop()
+        self.block = snapshot["block"]
+        self.is_split = snapshot["is_split"]
+        self.mini_blocks = snapshot["mini_blocks"]
+        self.active_block = snapshot["active_block"]
+        self.bridges = snapshot["bridges"]
+        self.moves = snapshot["moves"]
+        self.status = snapshot["status"]
+        self.lost_reason = snapshot["lost_reason"]
+        self.broken_tile = snapshot["broken_tile"]
+        self.last_event = "UNDO"
+        return True
 
     def get_bridge_at(self, r, c):
         for bid, binfo in self.bridges.items():
@@ -210,6 +248,7 @@ class BloxorzGame:
         # Chuyển đổi khối đang điều khiển (khi đang ở chế độ tách khối)
         if dir_upper == "SWITCH":
             if self.is_split:
+                self._save_snapshot()
                 self.active_block = 1 - self.active_block
             return self.status
 
@@ -225,6 +264,7 @@ class BloxorzGame:
             if not action_fn:
                 return self.status
 
+            self._save_snapshot()
             next_block = action_fn()
             self.moves += 1
 
@@ -255,6 +295,13 @@ class BloxorzGame:
 
             # 4. Kiểm tra kích hoạt công tắc
             self.check_switches_for_block(self.block)
+
+            # 5. Kiểm tra nếu công tắc vừa bật làm sập cầu ngay dưới chân khối -> rơi!
+            if not self.is_legal(self.block):
+                self.status = "LOST"
+                self.lost_reason = "BRIDGE_CLOSED"
+                return self.status
+
             return self.status
 
         # ── TRƯỜNG HỢP 2: ĐANG TÁCH THÀNH 2 KHỐI 1x1x1 ────────
@@ -268,17 +315,12 @@ class BloxorzGame:
             else:
                 return self.status
 
+            self._save_snapshot()
             nr, nc = cur_r + dr, cur_c + dc
             self.mini_blocks[self.active_block] = [nr, nc]
             self.moves += 1
 
-            # 1. Khối nhỏ rơi vào lỗ đích -> thua (chỉ khối to đứng thẳng mới thắng)
-            if 0 <= nr < self.rows and 0 <= nc < self.cols and self.board[nr][nc] == 2:
-                self.status = "LOST"
-                self.lost_reason = "FALL"
-                return self.status
-
-            # 2. Khối nhỏ rơi ra vực / cầu đóng
+            # 1. Khối nhỏ rơi ra vực / cầu đóng (lưu ý: ô đích 2 vẫn là sàn đi được với khối nhỏ, không bị rớt)
             if not self.is_walkable(nr, nc):
                 self.status = "LOST"
                 self.lost_reason = "FALL"
@@ -294,27 +336,26 @@ class BloxorzGame:
                 self.mini_blocks = []
                 self.last_event = "MERGE"
 
-                # Kiểm tra sau khi gộp
-                if self.block.is_standing():
-                    (r1, c1), _ = self.block.state
-                    if self.is_fragile(r1, c1):
-                        self.status = "LOST"
-                        self.lost_reason = "FRAGILE_BREAK"
-                        self.broken_tile = [r1, c1]
-                        return self.status
-
-                if self.is_goal(self.block):
-                    self.status = "WON"
+                # Khối sau khi gộp luôn ở tư thế nằm (ngang hoặc dọc), kiểm tra hợp lệ
+                if not self.is_legal(self.block):
+                    self.status = "LOST"
+                    self.lost_reason = "FALL"
                     return self.status
 
+                # Kích hoạt công tắc cho khối vừa gộp
                 self.check_switches_for_block(self.block)
+                if not self.is_legal(self.block):
+                    self.status = "LOST"
+                    self.lost_reason = "BRIDGE_CLOSED"
+                    return self.status
+
                 return self.status
 
             # 4. Kích hoạt công tắc mềm cho khối nhỏ
             self.check_switches_for_mini(nr, nc)
 
-            # 5. Nếu công tắc vừa bật làm sập cầu dưới chân khối nhỏ còn lại -> thua
-            if not self.is_walkable(or_, oc):
+            # 5. Nếu công tắc vừa bật làm sập cầu dưới chân khối nhỏ này HOẶC khối còn lại -> thua
+            if not self.is_walkable(nr, nc) or not self.is_walkable(or_, oc):
                 self.status = "LOST"
                 self.lost_reason = "BRIDGE_CLOSED"
                 return self.status
@@ -328,8 +369,17 @@ class BloxorzGame:
         next_idx = (self.level_index + 1) % len(LEVELS)
         self.load_level(next_idx)
 
+    def get_possible_actions(self):
+        """Trả về danh sách các action hợp lệ có thể bấm ở trạng thái hiện tại"""
+        if self.status != "PLAYING":
+            return []
+        actions = ["UP", "DOWN", "LEFT", "RIGHT"]
+        if self.is_split:
+            actions.append("SWITCH")
+        return actions
+
     def to_dict(self):
-        """Đóng gói toàn bộ thông tin bàn cờ, khối, cầu, công tắc sang JSON cho Frontend 3D"""
+        """Đóng gói toàn bộ thông tin bàn cờ, khối, cầu, công tắc sang JSON cho Frontend / UI"""
         block_info = None
         if not self.is_split:
             (r1, c1), (r2, c2) = self.block.state
@@ -369,4 +419,6 @@ class BloxorzGame:
             "broken_tile": self.broken_tile,
             "last_event": self.last_event,
             "moves": self.moves,
+            "can_undo": self.can_undo(),
+            "history_length": len(self.history),
         }
