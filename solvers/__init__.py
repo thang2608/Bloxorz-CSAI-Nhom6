@@ -7,7 +7,7 @@ from .bfs import solve_bfs
 # Danh bạ các thuật toán (Tên hiển thị và Hàm giải)
 AVAILABLE_SOLVERS = {
     "A*": solve_astar_from_game,
-    # "BFS": solve_bfs_from_game,
+    "BFS": solve_bfs,
     # "DFS": solve_dfs_from_game,
 }
 

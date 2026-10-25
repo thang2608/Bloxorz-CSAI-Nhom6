@@ -4,6 +4,9 @@ from collections import deque
 from .base import extract_state, get_valid_actions, get_next_state, reconstruct_moves
 
 def solve_bfs(initial_game):
+    if initial_game.status != "PLAYING":
+        return None
+
     tracemalloc.start()
     start_time = time.time()
     
@@ -40,11 +43,15 @@ def solve_bfs(initial_game):
                     path = reconstruct_moves(parents, next_state)
                     
                     return {
+                        "algorithm": "BFS",
                         "path": path,
+                        "moves": path,
                         "solution_length": len(path),
+                        "total_cost": len([m for m in path if m != "SWITCH"]),
                         "search_time": search_time,
                         "memory_usage": peak_memory,
-                        "expanded_nodes": expanded_nodes
+                        "expanded_nodes": expanded_nodes,
+                        "nodes_expanded": expanded_nodes,
                     }
                 
                 frontier.append(next_state)
