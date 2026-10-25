@@ -18,6 +18,14 @@ import math
 import random
 import traceback
 
+# Đoạn này là tạo biến cho các thuật toán A*
+from solvers import AVAILABLE_SOLVERS
+
+solver_names = list(AVAILABLE_SOLVERS.keys())
+current_solver_idx = 0           # 0: A*, 1: BFS, 2: DFS,...
+ai_move_queue = []               # Hàng đợi bước đi
+ai_stats = None                  # Lưu thống kê: số bước, số node duyệt
+show_solvers_dropdown = False    # Biến bật/tắt menu xổ xuống của SOLVERS
 
 def crash_handler(exc_type, exc_value, exc_traceback):
     """Ghi lại lỗi crash ra file crash_log.txt để kiểm tra tức thì nếu có sự cố"""
@@ -92,7 +100,7 @@ chars = set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 `~!@
 vn_chars = "aáàảãạăắằẳẵặâấầẩẫậeéèẻẽẹêếềểễệiíìỉĩịoóòỏõọôốồổỗộơớờởỡợuúùủũụưứừửữựyýỳỷỹỵdđ"
 vn_chars += vn_chars.upper()
 chars.update(vn_chars)
-chars.update("·–—•+-/()")
+chars.update("·–—•+-/()▼▲")
 VIETNAMESE_CODEPOINTS = sorted(list(set(ord(c) for c in chars)))
 
 
@@ -101,10 +109,18 @@ def init_fonts():
     global ui_font_bold, ui_font_regular
 
     font_bold_candidates = [
+        # Đường dẫn trên Windows
+        b"C:/Windows/Fonts/arialbd.ttf",
+        b"C:/Windows/Fonts/segoeuib.ttf",
+        # Đường dẫn trên macOS
         b"/System/Library/Fonts/Supplemental/Arial Bold.ttf",
         b"/System/Library/Fonts/Supplemental/Trebuchet MS Bold.ttf",
     ]
     font_reg_candidates = [
+        # Đường dẫn trên Windows
+        b"C:/Windows/Fonts/arial.ttf",
+        b"C:/Windows/Fonts/segoeui.ttf",
+        # Đường dẫn trên macOS
         b"/System/Library/Fonts/Supplemental/Arial.ttf",
         b"/System/Library/Fonts/Supplemental/Trebuchet MS.ttf",
     ]
@@ -552,6 +568,43 @@ def perform_move(move_dir):
     }
     roll_animating = True
 
+# ── Logic Điều Khiển Thuật Toán AI (A*, BFS, DFS,...) ──────────
+def trigger_ai_solve(algo_name=None):
+    """Tìm đường bằng thuật toán (nếu có truyền tên) và tự động di chuyển"""
+    global ai_move_queue, ai_stats, current_solver_idx, show_solvers_dropdown
+    show_solvers_dropdown = False  # Đóng menu sau khi đã chọn
+
+    if game.status != "PLAYING":
+        return
+    # Nếu AI đang chạy mà bấm thì dừng lại
+    if ai_move_queue and algo_name is None:
+        ai_move_queue.clear()
+        return
+
+    # Nếu người chơi click chọn một thuật toán cụ thể từ dropdown
+    if algo_name is not None and algo_name in solver_names:
+        current_solver_idx = solver_names.index(algo_name)
+
+    chosen_algo = solver_names[current_solver_idx]
+    solver_fn = AVAILABLE_SOLVERS[chosen_algo]
+    
+    print(f"\n[*] Đang tìm đường bằng thuật toán: {chosen_algo}...")
+    result = solver_fn(game)
+    if result and result.get("moves"):
+        ai_move_queue = list(result["moves"])
+        ai_stats = result
+        print(f"[{chosen_algo}] Đã tìm thấy {len(ai_move_queue)} bước! (Duyệt {result.get('nodes_expanded', 0)} trạng thái)")
+    else:
+        print(f"[{chosen_algo}] Không tìm thấy đường đi tới đích!")
+
+
+def cycle_solver():
+    """Chuyển đổi qua lại giữa các thuật toán có sẵn (A* -> BFS -> DFS -> ...)"""
+    global current_solver_idx, ai_move_queue
+    ai_move_queue.clear() # Dừng AI hiện tại nếu đang chạy
+    current_solver_idx = (current_solver_idx + 1) % len(solver_names)
+    print(f"[*] Đã chuyển sang thuật toán: {solver_names[current_solver_idx]}")
+
 
 def draw_deluxe_block(pos, size, color, wire_color, is_golden=True):
     """Vẽ khối hộp kim loại vát cạnh sang trọng với bề mặt đồng nhất, sạch sẽ"""
@@ -668,6 +721,7 @@ def load_and_play_level(idx):
     buffered_move = None
     roll_angle = 0.0
     roll_y_offset = 0.0
+    ai_move_queue.clear()  # Xóa hàng đợi bước cũ để khi người chơi đổi màn chơi thì AI tự dừng lại
     game.load_level(idx)
     reset_camera()
     current_state = STATE_PLAYING
@@ -1265,7 +1319,7 @@ def draw_cinematic_vignette(w, h):
 
 def draw_2d_hud():
     """Bảng thông tin khi đang chơi, nút Menu và Modal Thắng/Thua"""
-    global current_state, roll_animating, buffered_move
+    global current_state, roll_animating, buffered_move, ai_move_queue
 
     w = rl.get_screen_width()
     h = rl.get_screen_height()
@@ -1285,25 +1339,76 @@ def draw_2d_hud():
     draw_text_ui(f"MÀN {game.level_index + 1:02d}  ·  {clean_name}", 40, 58, 14, rl.Color(220, 240, 250, 255), is_bold=True)
     draw_text_ui(f"BƯỚC ĐI: {game.moves}", 40, 82, 18, rl.Color(0, 240, 245, 255), is_bold=True, glow=True)
 
+    # ── [NÚT SOLVERS DROPDOWN] ─────────────────────────────────
+    global show_solvers_dropdown
+    btn_solvers = rl.Rectangle(w - 295, 24, 135, 40)
+    h_solvers, c_solvers = check_button(btn_solvers)
+    
+    # Nếu AI đang tự chạy thì hiện nút "DỪNG AI", ngược lại hiện "SOLVERS ▼"
+    if ai_move_queue:
+        solvers_label = "DỪNG AI"
+        draw_styled_button(btn_solvers, solvers_label, 14, h_solvers, active=True, accent_col=rl.Color(255, 80, 85, 255))
+        if c_solvers:
+            ai_move_queue.clear()
+    else:
+        arrow = "▲" if show_solvers_dropdown else "▼"
+        solvers_label = f"SOLVERS {arrow}"
+        draw_styled_button(btn_solvers, solvers_label, 14, h_solvers, active=show_solvers_dropdown, accent_col=rl.Color(65, 245, 160, 255))
+        if c_solvers:
+            show_solvers_dropdown = not show_solvers_dropdown
+
+    # Vẽ danh sách menu xổ xuống khi show_solvers_dropdown = True
+    if show_solvers_dropdown and not ai_move_queue:
+        item_h = 36
+        total_menu_h = len(solver_names) * (item_h + 4) + 6
+        drop_rect = rl.Rectangle(w - 295, 68, 135, total_menu_h)
+        
+        # Khung nền đổ bóng cho menu dropdown
+        rl.draw_rectangle_rounded(drop_rect, 0.16, 6, rl.Color(14, 24, 34, 250))
+        rl.draw_rectangle_rounded_lines(drop_rect, 0.16, 6, rl.Color(0, 240, 245, 180))
+
+        # Vẽ từng thuật toán có trong hệ thống (A*, BFS, DFS,...)
+        for idx, name in enumerate(solver_names):
+            item_rect = rl.Rectangle(w - 290, 72 + idx * (item_h + 4), 125, item_h)
+            h_item, c_item = check_button(item_rect)
+            draw_styled_button(
+                item_rect,
+                name,
+                14,
+                h_item,
+                accent_col=rl.Color(0, 240, 245, 255)
+            )
+            # Click vào thuật toán nào -> chạy ngay thuật toán đó!
+            if c_item:
+                trigger_ai_solve(name)
+
+        # Tự động đóng menu nếu người chơi click chuột ra ngoài vùng menu
+        if rl.is_mouse_button_pressed(rl.MOUSE_BUTTON_LEFT) and not h_solvers:
+            mouse_pos = rl.get_mouse_position()
+            if not rl.check_collision_point_rec(mouse_pos, drop_rect):
+                show_solvers_dropdown = False
+
     # Nút [MENU (ESC)] ở góc trên bên phải
     btn_menu_top = rl.Rectangle(w - 150, 24, 126, 40)
     h_mtop, c_mtop = check_button(btn_menu_top)
     draw_styled_button(btn_menu_top, "MENU (ESC)", 15, h_mtop, accent_col=rl.Color(255, 215, 80, 255))
     if c_mtop:
+        ai_move_queue.clear()
         current_state = STATE_MENU
 
     # Thanh điều khiển đáy màn hình
-    bar_w = min(w - 40, 900)
+    bar_w = min(w - 40, 960)
     bar_rect = rl.Rectangle(w // 2 - bar_w // 2, h - 46, bar_w, 34)
     rl.draw_rectangle_rounded(bar_rect, 0.45, 8, rl.Color(14, 28, 38, 215))
     rl.draw_rectangle_rounded_lines(bar_rect, 0.45, 8, rl.Color(65, 90, 110, 160))
 
-    ctrl_text = "[W/A/S/D]: Lăn khối  ·  [Kéo Chuột]: Xoay 3D  ·  [Cuộn]: Zoom  ·  [Z]: Hoàn tác  ·  [Space]: Đổi khối  ·  [R]: Chơi lại"
-    text_w = measure_text_ui(ctrl_text, 14, is_bold=False)
-    draw_text_ui(ctrl_text, w // 2 - text_w // 2, h - 38, 14, rl.Color(195, 225, 235, 255), is_bold=False)
+    ctrl_text = "[W/A/S/D]: Lăn khối  ·  [H]: AI Giải  ·  [Tab]: Đổi thuật toán  ·  [Z]: Hoàn tác  ·  [Space]: Đổi khối  ·  [R]: Chơi lại"
+    text_w = measure_text_ui(ctrl_text, 13, is_bold=False)
+    draw_text_ui(ctrl_text, w // 2 - text_w // 2, h - 38, 13, rl.Color(195, 225, 235, 255), is_bold=False)
 
     # Modal Thắng / Thua tương tác đầy đủ (chỉ hiện khi đã hoàn tất hoạt ảnh)
     if game.status in ("WON", "LOST") and not roll_animating:
+        ai_move_queue.clear()
         mw, mh = 540, 204
         mrect = rl.Rectangle(w // 2 - mw // 2, h // 2 - mh // 2, mw, mh)
         rl.draw_rectangle_rounded(mrect, 0.14, 8, rl.Color(10, 22, 32, 250))
@@ -1395,6 +1500,7 @@ while not rl.window_should_close():
 
     # ── Phím ESC: Bật/Tắt Menu nhanh ở mọi lúc ──
     if rl.is_key_pressed(rl.KEY_ESCAPE):
+        ai_move_queue.clear()
         if current_state == STATE_PLAYING:
             current_state = STATE_MENU
         else:
@@ -1404,6 +1510,7 @@ while not rl.window_should_close():
     if current_state == STATE_PLAYING:
         # 1. Trạng thái ĐÃ CHIẾN THẮNG: người chơi nhấn phím Space, Enter hoặc N để qua màn tiếp
         if game.status == "WON" and not roll_animating:
+            ai_move_queue.clear()
             if (rl.is_key_pressed(rl.KEY_SPACE) or rl.is_key_pressed(rl.KEY_ENTER) or
                 rl.is_key_pressed(rl.KEY_N)):
                 game.next_level()
@@ -1413,6 +1520,7 @@ while not rl.window_should_close():
 
         # 2. Trạng thái THẤT BẠI: phím Space/Enter/R để chơi lại, Z để hoàn tác
         elif game.status == "LOST" and not roll_animating:
+            ai_move_queue.clear()
             if (rl.is_key_pressed(rl.KEY_SPACE) or rl.is_key_pressed(rl.KEY_ENTER) or
                 rl.is_key_pressed(rl.KEY_R)):
                 game.reset()
@@ -1427,32 +1535,51 @@ while not rl.window_should_close():
         # 3. Trạng thái ĐANG CHƠI BÌNH THƯỜNG
         else:
             target_move = None
+            # Nếu người chơi tự nhấn phím lăn -> Hủy AI tự động để nhường quyền điều khiển
             if rl.is_key_pressed(rl.KEY_W) or rl.is_key_pressed(rl.KEY_UP):
+                ai_move_queue.clear()
                 target_move = "UP"
             elif rl.is_key_pressed(rl.KEY_S) or rl.is_key_pressed(rl.KEY_DOWN):
+                ai_move_queue.clear()
                 target_move = "DOWN"
             elif rl.is_key_pressed(rl.KEY_A) or rl.is_key_pressed(rl.KEY_LEFT):
+                ai_move_queue.clear()
                 target_move = "LEFT"
             elif rl.is_key_pressed(rl.KEY_D) or rl.is_key_pressed(rl.KEY_RIGHT):
+                ai_move_queue.clear()
                 target_move = "RIGHT"
-            elif rl.is_key_pressed(rl.KEY_SPACE) or rl.is_key_pressed(rl.KEY_TAB):
+            # ── [THÊM MỚI] Phím H: Kích hoạt / Tắt AI ──
+            elif rl.is_key_pressed(rl.KEY_H):
+                trigger_ai_solve()
+            # ── [THÊM MỚI] Phím TAB: Đổi thuật toán (nếu chưa tách khối) ──
+            elif rl.is_key_pressed(rl.KEY_TAB):
+                if not game.is_split:
+                    cycle_solver()
+                else:
+                    if not roll_animating:
+                        game.move("SWITCH")
+            elif rl.is_key_pressed(rl.KEY_SPACE):
                 if game.is_split and not roll_animating:
                     game.move("SWITCH")
             elif rl.is_key_pressed(rl.KEY_Z) or rl.is_key_pressed(rl.KEY_BACKSPACE):
+                ai_move_queue.clear()
                 if game.undo():
                     roll_animating = False
                     buffered_move = None
             elif rl.is_key_pressed(rl.KEY_R):
+                ai_move_queue.clear()
                 game.reset()
                 reset_camera()
                 roll_animating = False
                 buffered_move = None
             elif rl.is_key_pressed(rl.KEY_N):
+                ai_move_queue.clear()
                 game.next_level()
                 reset_camera()
                 roll_animating = False
                 buffered_move = None
             elif rl.is_key_pressed(rl.KEY_P):
+                ai_move_queue.clear()
                 prev_i = (game.level_index - 1) % len(LEVELS)
                 game.load_level(prev_i)
                 reset_camera()
@@ -1466,6 +1593,14 @@ while not rl.window_should_close():
                     perform_move(target_move)
                 elif game.status == "PLAYING":
                     buffered_move = target_move
+
+            # ── [THÊM MỚI] Tự động lấy bước đi từ hàng đợi AI khi khối đã lăn xong bước trước ──
+            if not roll_animating and ai_move_queue and game.status == "PLAYING":
+                next_ai_action = ai_move_queue.pop(0)
+                if next_ai_action == "SWITCH":
+                    game.move("SWITCH")
+                else:
+                    perform_move(next_ai_action)
 
         # Xoay Camera 360° bằng chuột hoặc Trackpad khi đang chơi
         if rl.is_mouse_button_down(rl.MOUSE_BUTTON_LEFT) or rl.is_mouse_button_down(rl.MOUSE_BUTTON_RIGHT):
@@ -1601,3 +1736,4 @@ while not rl.window_should_close():
     rl.end_drawing()
 
 rl.close_window()
+
