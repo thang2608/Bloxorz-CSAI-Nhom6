@@ -1346,7 +1346,7 @@ def draw_2d_hud():
     
     # Nếu AI đang tự chạy thì hiện nút "DỪNG AI", ngược lại hiện "SOLVERS ▼"
     if ai_move_queue:
-        solvers_label = "DỪNG AI"
+        solvers_label = "DỪNG THUẬT TOÁN"
         draw_styled_button(btn_solvers, solvers_label, 14, h_solvers, active=True, accent_col=rl.Color(255, 80, 85, 255))
         if c_solvers:
             ai_move_queue.clear()
