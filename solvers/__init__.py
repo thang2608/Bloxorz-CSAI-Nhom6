@@ -4,14 +4,16 @@ from .astar import solve_astar_from_game
 # from .bfs import solve_bfs_from_game
 # from .dfs import solve_dfs_from_game
 from .bfs import solve_bfs
+from .dfs import solve_dfs, solve_ids
 # Danh bạ các thuật toán (Tên hiển thị và Hàm giải)
 AVAILABLE_SOLVERS = {
     "A*": solve_astar_from_game,
     "BFS": solve_bfs,
-    # "DFS": solve_dfs_from_game,
+    "DFS": solve_dfs,
+    "IDS": solve_ids,
 }
-
-
+ 
+ 
 def solve_game(game, algo_name: str = "A*") -> dict | None:
     """Hàm trung tâm để gọi thuật toán bất kỳ theo tên."""
     solver_fn = AVAILABLE_SOLVERS.get(algo_name)
