@@ -3,7 +3,7 @@ from .astar import solve_astar_from_game
 # Sau này có BFS, DFS thì import thêm ở đây:
 # from .bfs import solve_bfs_from_game
 # from .dfs import solve_dfs_from_game
-
+from .bfs import solve_bfs
 # Danh bạ các thuật toán (Tên hiển thị và Hàm giải)
 AVAILABLE_SOLVERS = {
     "A*": solve_astar_from_game,
