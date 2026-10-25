@@ -1,105 +1,109 @@
-import copy
-import heapq
+# solvers/ucs_solver.py — Thuật toán tìm kiếm Uniform Cost Search (UCS)
+from heapq import heappop, heappush
+from itertools import count
 import time
 import tracemalloc
 from game import BloxorzGame
+from .base import (
+    extract_state,
+    get_next_state,
+    get_valid_actions,
+    reconstruct_moves,
+)
 
 
-def encode_state(game):
-    """Chuyển trạng thái hiện tại của game thành tuple bất biến để làm key trong dict."""
-    if game.is_split:
-        blk_pos = None
-        minis = tuple(tuple(p) for p in game.mini_blocks)
-        active = game.active_block
+def solve_ucs(game_or_level=0) -> dict | None:
+    """
+    Chạy thuật toán Uniform Cost Search (UCS / Dijkstra).
+    Hỗ trợ nhận vào đối tượng BloxorzGame (dùng cho UI)
+    hoặc số nguyên level_index (dùng cho CLI test độc lập).
+    """
+    if isinstance(game_or_level, int):
+        game = BloxorzGame(game_or_level)
     else:
-        blk_pos = game.block.state
-        minis = ()
-        active = 0
+        game = game_or_level
 
-    # Phải sort bridges theo id để đảm bảo cùng 1 trạng thái cầu luôn ra cùng 1 tuple
-    bridges = tuple((b_id, data["is_open"]) for b_id, data in sorted(game.bridges.items()))
+    if game.status != "PLAYING":
+        return None
 
-    return (blk_pos, game.is_split, minis, active, bridges)
-
-
-def solve_ucs(level_index=0):
     tracemalloc.start()
-    t0 = time.perf_counter()
+    start_time = time.perf_counter()
 
-    init_game = BloxorzGame(level_index)
-    init_key = encode_state(init_game)
+    initial_state = extract_state(game)
+    sequence = count()
+    
+    # Priority Queue lưu: (cost, tie_breaker, state)
+    frontier = [(0, next(sequence), initial_state)]
+    best_cost = {initial_state: 0}
+    parents = {}
+    nodes_expanded = 0
 
-    # Hàng đợi ưu tiên lưu: (cost, tie_breaker, state_key)
-    tie_breaker = 0
-    pq = [(0, tie_breaker, init_key)]
+    goal_reached_state = None
 
-    state_map = {init_key: init_game}
-    min_cost = {init_key: 0}
-    trace = {init_key: (None, None)}  # Lưu (state_cha, action_đã_đi) để truy vết
+    while frontier:
+        cost, _, state = heappop(frontier)
 
-    expanded = 0
-    goal_key = None
-
-    while pq:
-        cost, _, curr_key = heapq.heappop(pq)
-
-        # Nếu đường đi này đắt hơn đường đã biết tới curr_key thì bỏ qua (lazy deletion)
-        if cost > min_cost.get(curr_key, float("inf")):
+        if cost > best_cost.get(state, float("inf")):
             continue
 
-        curr_game = state_map[curr_key]
+        nodes_expanded += 1
 
-        if curr_game.status == "WON":
-            goal_key = curr_key
-            break
-
-        if curr_game.status != "PLAYING":
-            continue
-
-        expanded += 1
-
-        for move_dir in curr_game.get_possible_actions():
-            nxt_game = copy.deepcopy(curr_game)
-            nxt_game.move(move_dir)
-            nxt_game.history = []  # Xóa lịch sử undo cho nhẹ RAM khi chạy tìm kiếm
-
-            if nxt_game.status == "LOST":
+        for action in get_valid_actions(state):
+            next_state, is_won = get_next_state(game, state, action)
+            if next_state is None:
                 continue
 
-            nxt_key = encode_state(nxt_game)
-            nxt_cost = cost + 1
+            step_cost = 0.1 if action == "SWITCH" else 1.0
+            next_cost = cost + step_cost
 
-            if nxt_cost < min_cost.get(nxt_key, float("inf")):
-                min_cost[nxt_key] = nxt_cost
-                state_map[nxt_key] = nxt_game
-                trace[nxt_key] = (curr_key, move_dir)
+            if next_cost >= best_cost.get(next_state, float("inf")):
+                continue
 
-                tie_breaker += 1
-                heapq.heappush(pq, (nxt_cost, tie_breaker, nxt_key))
+            best_cost[next_state] = next_cost
+            parents[next_state] = (state, action)
 
-    elapsed = time.perf_counter() - t0
+            if is_won:
+                goal_reached_state = next_state
+                break
+
+            heappush(frontier, (next_cost, next(sequence), next_state))
+
+        if goal_reached_state is not None:
+            break
+
+    elapsed = time.perf_counter() - start_time
     _, peak_mem = tracemalloc.get_traced_memory()
     tracemalloc.stop()
 
-    # Truy vết ngược từ đích về trạng thái đầu
-    path = []
-    if goal_key is not None:
-        curr = goal_key
-        while trace[curr][0] is not None:
-            prev_key, act = trace[curr]
-            path.append(act)
-            curr = prev_key
-        path.reverse()
+    if goal_reached_state is not None:
+        moves = reconstruct_moves(parents, goal_reached_state)
+        total_cost = len([m for m in moves if m != "SWITCH"])
+        return {
+            "algorithm": "UCS",
+            "found": True,
+            "moves": moves,
+            "path": moves,
+            "solution_length": len(moves),
+            "total_cost": total_cost,
+            "search_time": elapsed,
+            "search_time_seconds": elapsed,
+            "memory_usage": peak_mem,
+            "peak_memory_mb": peak_mem / (1024 * 1024),
+            "nodes_expanded": nodes_expanded,
+            "expanded_nodes": nodes_expanded,
+        }
 
-    found = goal_key is not None
     return {
-        "found": found,
-        "path": path,
-        "solution_length": len(path) if found else None,
-        "total_cost": min_cost[goal_key] if found else None,
-        "expanded_nodes": expanded,
+        "algorithm": "UCS",
+        "found": False,
+        "moves": [],
+        "path": [],
+        "solution_length": 0,
+        "total_cost": 0,
         "search_time_seconds": elapsed,
-        "peak_memory_mb": peak_mem / (1024 * 1024)
+        "peak_memory_mb": peak_mem / (1024 * 1024),
+        "nodes_expanded": nodes_expanded,
+        "expanded_nodes": nodes_expanded,
     }
 
 
@@ -113,13 +117,14 @@ if __name__ == "__main__":
     res = solve_ucs(args.level)
 
     print(f"\n--- KẾT QUẢ UCS (Level {args.level}) ---")
-    if res["found"]:
+    if res and res.get("found"):
         print("Đường đi:", " -> ".join(res["path"]))
         print("Số bước:", res["solution_length"])
         print("Tổng chi phí:", res["total_cost"])
     else:
         print("Không tìm thấy lời giải!")
 
-    print(f"Số node đã mở rộng: {res['expanded_nodes']}")
-    print(f"Thời gian chạy: {res['search_time_seconds']:.6f} s")
-    print(f"Bộ nhớ đỉnh: {res['peak_memory_mb']:.4f} MB")
+    if res:
+        print(f"Số node đã mở rộng: {res['nodes_expanded']}")
+        print(f"Thời gian chạy: {res['search_time_seconds']:.6f} s")
+        print(f"Bộ nhớ đỉnh: {res['peak_memory_mb']:.4f} MB")

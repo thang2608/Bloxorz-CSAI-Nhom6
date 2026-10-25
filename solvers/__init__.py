@@ -5,12 +5,15 @@ from .astar import solve_astar_from_game
 # from .dfs import solve_dfs_from_game
 from .bfs import solve_bfs
 from .dfs import solve_dfs, solve_ids
+from .ucs_solver import solve_ucs
+
 # Danh bạ các thuật toán (Tên hiển thị và Hàm giải)
 AVAILABLE_SOLVERS = {
     "A*": solve_astar_from_game,
     "BFS": solve_bfs,
     "DFS": solve_dfs,
     "IDS": solve_ids,
+    "UCS": solve_ucs,
 }
  
  

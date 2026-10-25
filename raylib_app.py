@@ -230,13 +230,14 @@ GOAL_RIM = rl.Color(0, 245, 255, 255)
 GOAL_BEAM = rl.Color(0, 235, 245, 45)
 GOAL_BEAM_WIRE = rl.Color(0, 240, 245, 140)
 
-BLOCK_COLOR = rl.Color(238, 168, 38, 255)
-BLOCK_WIRE = rl.Color(255, 218, 95, 240)
+BLOCK_COLOR = rl.Color(240, 140, 30, 255)
+BLOCK_WIRE = rl.Color(255, 205, 110, 240)
 
-MINI_ACTIVE = rl.Color(0, 240, 245, 255)
-MINI_ACTIVE_WIRE = rl.Color(180, 255, 255, 255)
-MINI_IDLE = rl.Color(180, 135, 235, 255)
-MINI_IDLE_WIRE = rl.Color(220, 190, 255, 220)
+# Chế độ phân thân: cả 2 cục đều màu cam, cục đang chọn hơi vàng sáng hơn
+MINI_ACTIVE = rl.Color(255, 195, 45, 255)
+MINI_ACTIVE_WIRE = rl.Color(255, 240, 160, 255)
+MINI_IDLE = rl.Color(240, 140, 30, 255)
+MINI_IDLE_WIRE = rl.Color(255, 205, 110, 240)
 
 # ── 3. Quản lý Game, Camera & Bầu trời sao Vũ trụ ───────────────
 game = BloxorzGame(0)
@@ -607,15 +608,53 @@ def cycle_solver():
 
 
 def draw_deluxe_block(pos, size, color, wire_color, is_golden=True):
-    """Vẽ khối hộp kim loại vát cạnh sang trọng với bề mặt đồng nhất, sạch sẽ"""
-    # 1. Khối hộp đồng nhất màu sắc toàn bộ 6 mặt (loại bỏ hoàn toàn mảng màu vàng sáng ở giữa)
+    """Vẽ khối hộp kim loại vát cạnh sang trọng, hiển thị đường nối mờ tinh tế phân chia hai nửa 1x1x1"""
+    # 1. Vẽ thân khối hộp chính và viền ngoài
     rl.draw_cube(pos, size.x, size.y, size.z, color)
-    # 2. Khung viền vát cạnh phản quang tinh tế
     rl.draw_cube_wires(pos, size.x, size.y, size.z, wire_color)
 
-    if not is_golden:
-        # Khối phân thân ngọc lam đa chiều
-        rl.draw_cube_wires(pos, size.x * 0.88, size.y * 0.88, size.z * 0.88, rl.Color(220, 255, 255, 160))
+    # Kiểm tra xem khối có phải là khối dài 2x1x1
+    max_dim = max(size.x, size.y, size.z)
+    min_dim = min(size.x, size.y, size.z)
+    is_2x1 = (max_dim > min_dim * 1.4)
+
+    if is_2x1:
+        # Xác định trục dài của khối 2x1x1
+        if size.y >= max_dim - 0.01:
+            # Khối đứng dọc theo trục Y (đường nối nằm ngang trên mặt phẳng XZ)
+            sub_sz = rl.Vector3(size.x, size.y * 0.5, size.z)
+            p1 = rl.Vector3(pos.x, pos.y - size.y * 0.25, pos.z)
+            p2 = rl.Vector3(pos.x, pos.y + size.y * 0.25, pos.z)
+            # Vòng chỉ phân tách ở giữa (nhô nhẹ 0.006 ra ngoài mặt khối để không bị hiện tượng nét đứt Z-fighting)
+            ring_outer = rl.Vector3(size.x + 0.006, 0.008, size.z + 0.006)
+            band_subtle = rl.Vector3(size.x + 0.004, 0.016, size.z + 0.004)
+        elif size.x >= max_dim - 0.01:
+            # Khối nằm ngang theo trục X (đường nối nằm trên mặt phẳng YZ)
+            sub_sz = rl.Vector3(size.x * 0.5, size.y, size.z)
+            p1 = rl.Vector3(pos.x - size.x * 0.25, pos.y, pos.z)
+            p2 = rl.Vector3(pos.x + size.x * 0.25, pos.y, pos.z)
+            ring_outer = rl.Vector3(0.008, size.y + 0.006, size.z + 0.006)
+            band_subtle = rl.Vector3(0.016, size.y + 0.004, size.z + 0.004)
+        else:
+            # Khối nằm dọc theo trục Z (đường nối nằm trên mặt phẳng XY)
+            sub_sz = rl.Vector3(size.x, size.y, size.z * 0.5)
+            p1 = rl.Vector3(pos.x, pos.y, pos.z - size.z * 0.25)
+            p2 = rl.Vector3(pos.x, pos.y, pos.z + size.z * 0.25)
+            ring_outer = rl.Vector3(size.x + 0.006, size.y + 0.006, 0.008)
+            band_subtle = rl.Vector3(size.x + 0.004, size.y + 0.004, 0.016)
+
+        # 2. Khung tinh thể mờ bên trong lòng mỗi nửa 1x1x1 (cho thấy 2 khối độc lập bên trong mà không gây rối bề mặt ngoài)
+        rl.draw_cube_wires(p1, sub_sz.x * 0.88, sub_sz.y * 0.88, sub_sz.z * 0.88, rl.Color(255, 215, 120, 65))
+        rl.draw_cube_wires(p2, sub_sz.x * 0.88, sub_sz.y * 0.88, sub_sz.z * 0.88, rl.Color(255, 215, 120, 65))
+
+        # 3. Đường rãnh nối ở chính giữa: mờ nhẹ, liền mạch, tinh tế tông cam mật ong
+        # Lớp dải màu tối mờ tạo độ lõm sâu nhẹ
+        rl.draw_cube(pos, band_subtle.x, band_subtle.y, band_subtle.z, rl.Color(160, 85, 20, 60))
+        # Đường chỉ phân tách liền mạch, mờ dịu, không bị nét đứt
+        rl.draw_cube_wires(pos, ring_outer.x, ring_outer.y, ring_outer.z, rl.Color(255, 220, 140, 110))
+    else:
+        # Khối phân thân 1x1x1 khi đã tách ra (phản quang ánh vàng cam)
+        rl.draw_cube_wires(pos, size.x * 0.88, size.y * 0.88, size.z * 0.88, rl.Color(255, 230, 160, 150))
 
 
 def draw_contact_shadow():
@@ -1057,7 +1096,7 @@ def draw_3d_scene(dt):
     # ── 4. Bóng đổ tiếp xúc mềm chân thực (Dynamic Contact Shadow) ──
     draw_contact_shadow()
 
-    # ── 5. Dựng khối hộp Bloxorz Deluxe (Khối vàng thỏi & Khối ngọc lam) ──
+    # ── 5. Dựng khối hộp Bloxorz Deluxe (Khối cam hổ phách & Khối phân thân) ──
     if not game.is_split:
         if roll_animating and not roll_info.get("is_mini", False):
             draw_rolling_block(
@@ -1104,8 +1143,9 @@ def draw_3d_scene(dt):
             if is_active and not (game.status == "LOST"):
                 halo_y = 1.25 + math.sin(spin_timer * 4.0) * 0.06
                 halo_pos = grid_to_world(mr, mc, y=halo_y)
-                rl.draw_cylinder_wires(halo_pos, 0.32, 0.32, 0.04, 16, rl.Color(0, 255, 255, 255))
-                rl.draw_cylinder_wires(halo_pos, 0.40, 0.40, 0.02, 16, rl.Color(0, 220, 255, 140))
+                # Vòng hào quang vàng kim lơ lửng trên khối đang chọn
+                rl.draw_cylinder_wires(halo_pos, 0.32, 0.32, 0.04, 16, rl.Color(255, 235, 90, 255))
+                rl.draw_cylinder_wires(halo_pos, 0.40, 0.40, 0.02, 16, rl.Color(255, 210, 50, 150))
 
     # ── 6. Hiệu ứng hạt va đập & tia lửa phát sáng trong không gian 3D ──
     update_and_draw_particles(dt)
