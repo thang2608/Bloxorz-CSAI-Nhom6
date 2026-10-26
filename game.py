@@ -103,10 +103,18 @@ class BloxorzGame:
         self.switches = copy.deepcopy(level_data.get("switches", []))
 
         # Block & Split mode
-        self.block = Block(self.start_pos[0], self.start_pos[1])
-        self.is_split = False
-        self.mini_blocks = []      # [[r0, c0], [r1, c1]] khi split
-        self.active_block = 0      # 0 hoặc 1
+        start_split = level_data.get("start_split")
+        if start_split and len(start_split) == 2:
+            # Bài thực hành Hợp nhất: bắt đầu sẵn 2 khối nhỏ 1×1×1 tách rời
+            self.block = Block(start_split[0][0], start_split[0][1])
+            self.is_split = True
+            self.mini_blocks = [list(start_split[0]), list(start_split[1])]
+            self.active_block = 0
+        else:
+            self.block = Block(self.start_pos[0], self.start_pos[1])
+            self.is_split = False
+            self.mini_blocks = []      # [[r0, c0], [r1, c1]] khi split
+            self.active_block = 0      # 0 hoặc 1
 
         self.moves = 0
         self.status = "PLAYING"    # "PLAYING", "WON", "LOST"
