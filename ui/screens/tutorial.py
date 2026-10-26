@@ -95,9 +95,9 @@ TUTORIAL_LEVELS = [
         "description": "Đứng thẳng lên vòng tròn Cyan để tách thành 2 khối nhỏ.",
         "start": [1, 0],
         "board": [
-            [0, 0, 0, 1, 1, 0, 0],
-            [1, 1, 1, 1, 0, 0, 0],
-            [0, 0, 0, 1, 0, 1, 2],
+            [0, 0, 0, 1, 1, 1, 1, 1],
+            [1, 1, 1, 1, 0, 1, 1, 2],
+            [0, 0, 0, 1, 0, 1, 1, 1],
         ],
         "bridges": {
             0: {"tiles": [[2, 4]], "initially_open": False},
@@ -111,13 +111,12 @@ TUTORIAL_LEVELS = [
     {
         "id": 906, "name": "Hợp Nhất Khối (Gộp)",
         "description": "Di chuyển 2 khối nhỏ đến sát cạnh nhau để tự động hợp nhất.",
-        "start": [0, 0],
-        "start_split": [[0, 0], [0, 4]],
+        "start": [1, 0],
+        "start_split": [[1, 0], [1, 5]],
         "board": [
-            [1, 1, 0, 1, 1],
-            [1, 1, 0, 1, 1],
-            [1, 1, 1, 1, 1],
-            [0, 0, 0, 1, 2],
+            [1, 1, 1, 1, 1, 1],
+            [1, 1, 1, 2, 1, 1],
+            [1, 1, 1, 1, 1, 1],
         ],
         "bridges": {}, "switches": [],
     },
@@ -139,7 +138,7 @@ TUTORIAL_HINTS = [
     "Công tắc này mở cầu vĩnh viễn.\nSau khi kích hoạt lần đầu, cầu vẫn luôn mở\ndù bạn chạm vào công tắc thêm lần nữa.",
     "Công tắc này bật và tắt cầu luân phiên.\nMỗi lần chạm vào, trạng thái cầu sẽ\nđảo ngược giữa Đóng và Mở.",
     "Công tắc chữ X đòi hỏi trọng lượng lớn:\nCHỈ kích hoạt khi khối ĐỨNG THẲNG\nhoàn toàn trên nút. Lăn vòng để đổi tư thế!",
-    "Đứng thẳng lên vòng tròn Cyan để tách\nthành 2 khối nhỏ. Di chuyển Khối 1 mở cầu,\nnhấn Space chuyển sang Khối 2 để hội ngộ!",
+    "Đứng thẳng lên vòng tròn Cyan để tách\nthành 2 khối nhỏ. Điều khiển Khối 1 mở cầu,\nđưa cả 2 khối qua cầu rồi chạm nhau\nđể gộp lại thành khối lớn trước khi vào đích!",
     "Di chuyển 2 khối nhỏ (dùng W/A/S/D và [Space])\nđến 2 ô nằm sát cạnh nhau (ngang hoặc dọc)\nđể tự động hợp nhất lại thành khối 1x1x2!",
 ]
 
@@ -206,7 +205,7 @@ def draw_tutorial_stage1(w, h):
     # ── A. MỤC TIÊU ──
     sec_a_y = py + 62
     draw_text_ui("A. MỤC TIÊU", px + 34, sec_a_y, 18, rl.Color(0, 240, 245, 255), is_bold=True, shadow=True)
-    obj_text = "Lăn khối hộp 1×1×2 đến đúng ô đích màu xanh neon. Khối phải đứng thẳng hoàn toàn trên ô đích để chiến thắng."
+    obj_text = "Lăn khối hộp 1x1x2 đến đúng ô đích màu xanh neon. Khối phải đứng thẳng hoàn toàn trên ô đích để chiến thắng."
     draw_text_ui(obj_text, px + 34, sec_a_y + 26, 14, rl.Color(210, 230, 240, 255))
 
     # Minh họa trực quan: Khối 1x1x2 đứng cạnh ô đích phát sáng màu xanh neon
@@ -220,7 +219,7 @@ def draw_tutorial_stage1(w, h):
     rl.draw_rectangle_lines(illust_x + 5, illust_y - 18, 30, 44, rl.Color(255, 215, 120, 240))
     # Vạch chia 2 nửa khối 1x1x1
     rl.draw_line(illust_x + 5, illust_y + 4, illust_x + 35, illust_y + 4, rl.Color(200, 95, 15, 220))
-    draw_text_ui("Khối Bloxorz 1×1×2 (Đứng thẳng)", illust_x + 48, illust_y + 2, 13, rl.Color(255, 215, 120, 255), is_bold=True)
+    draw_text_ui("Khối Bloxorz 1x1x2 (Đứng thẳng)", illust_x + 48, illust_y + 2, 13, rl.Color(255, 215, 120, 255), is_bold=True)
 
     # Ô đích phát sáng màu xanh neon
     goal_x = illust_x + 340
@@ -267,7 +266,7 @@ def draw_tutorial_stage1(w, h):
     for k in ["Q", "E"]:
         draw_keycap(kx_cam, ky, kw, kh, k)
         kx_cam += kw + gap
-    draw_text_ui("& Cuộn chuột: Xoay góc nhìn 3D 360° và thu phóng camera", kx_cam + 4, ky + 7, 13, rl.Color(210, 230, 240, 255))
+    draw_text_ui("& Cuộn chuột: Xoay góc nhìn 3D 360 độ & thu phóng camera", kx_cam + 4, ky + 7, 13, rl.Color(210, 230, 240, 255))
     ky += kh + 6
 
     # Phím Space, Z, R
@@ -395,8 +394,9 @@ def draw_tutorial_stage2(w, h):
 
         # Badge trạng thái
         if is_done:
-            badge_text = "ĐÃ HOÀN THÀNH ✓"
+            badge_text = "ĐÃ HOÀN THÀNH"
             badge_col = rl.Color(65, 245, 120, 255)
+
             badge_bg = rl.Color(40, 120, 70, 70)
         else:
             badge_text = "THỰC HÀNH NGAY"
@@ -493,7 +493,7 @@ def draw_tutorial_practice_hud(w, h):
         draw_text_ui(st_text, 26, status_y, 13, st_col, is_bold=True)
     elif idx == 4:  # Bài 5 — Tách khối
         if game.is_split:
-            st_text = f"PHÂN THÂN  ·  Đang điều khiển: Khối {game.active_block + 1}  ·  [Space]: Đổi khối"
+            st_text = f"PHÂN THÂN (Khối {game.active_block + 1})  ·  [Space]: Đổi khối  ·  Đưa 2 khối qua cầu chạm nhau để gộp lại!"
             st_col = rl.Color(0, 230, 245, 255)
         else:
             st_text = "Lăn khối ĐỨNG THẲNG vào vòng tròn Cyan để tách thành 2 khối nhỏ"
