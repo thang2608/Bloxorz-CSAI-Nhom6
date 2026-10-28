@@ -108,6 +108,12 @@ def main():
                         else:
                             exit_tutorial_practice()
                             ctx.current_state = STATE_TUTORIAL_STAGE2
+                    elif rl.is_key_pressed(rl.KEY_R):
+                        play_sfx("reset")
+                        game.reset()
+                        ctx.reset_camera()
+                        ctx.roll_animating = False
+                        ctx.buffered_move = None
 
             # 2. Trạng thái THẤT BẠI
             elif game.status == "LOST" and not ctx.roll_animating:

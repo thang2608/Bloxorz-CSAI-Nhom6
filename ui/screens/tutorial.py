@@ -617,43 +617,64 @@ def draw_tutorial_practice_hud(w, h):
             t2 = f"Bạn đã nắm vững: {card['name']} trong {game.moves} bước!"
             col1 = rl.Color(65, 245, 160, 255)
 
-            bw_btn = 152
-            b1 = rl.Rectangle(w // 2 - 245, h // 2 + 40, bw_btn, 42)
-            b2 = rl.Rectangle(w // 2 - 76, h // 2 + 40, bw_btn, 42)
-            b3 = rl.Rectangle(w // 2 + 93, h // 2 + 40, bw_btn, 42)
+            if idx < 5:
+                bw_btn = 152
+                b1 = rl.Rectangle(w // 2 - 245, h // 2 + 40, bw_btn, 42)
+                b2 = rl.Rectangle(w // 2 - 76, h // 2 + 40, bw_btn, 42)
+                b3 = rl.Rectangle(w // 2 + 93, h // 2 + 40, bw_btn, 42)
 
-            h1, c1 = check_button(b1)
-            h2, c2 = check_button(b2)
-            h3, c3 = check_button(b3)
+                h1, c1 = check_button(b1)
+                h2, c2 = check_button(b2)
+                h3, c3 = check_button(b3)
 
-            if h1: notify_hover("tut_won_b1")
-            elif h2: notify_hover("tut_won_b2")
-            elif h3: notify_hover("tut_won_b3")
+                if h1: notify_hover("tut_won_b1")
+                elif h2: notify_hover("tut_won_b2")
+                elif h3: notify_hover("tut_won_b3")
 
-            draw_styled_button(b1, "CHƠI LẠI BÀI NÀY", 12, h1, accent_col=rl.Color(255, 215, 80, 255))
-            next_label = "BÀI TIẾP THEO >" if idx < 5 else "VỀ DANH SÁCH"
-            draw_styled_button(b2, next_label, 13, h2, accent_col=rl.Color(65, 245, 160, 255))
-            draw_styled_button(b3, "VỀ DANH SÁCH", 13, h3)
+                draw_styled_button(b1, "CHƠI LẠI BÀI NÀY", 12, h1, accent_col=rl.Color(255, 215, 80, 255))
+                draw_styled_button(b2, "BÀI TIẾP THEO >", 13, h2, accent_col=rl.Color(65, 245, 160, 255))
+                draw_styled_button(b3, "VỀ DANH SÁCH", 13, h3)
 
-            if c1:
-                game.reset()
-                play_sfx("reset")
-                ctx.reset_camera()
-                ctx.roll_animating = False
-                ctx.buffered_move = None
-            elif c2:
-                play_sfx("ui_select")
-                if idx < 5:
+                if c1:
+                    game.reset()
+                    play_sfx("reset")
+                    ctx.reset_camera()
+                    ctx.roll_animating = False
+                    ctx.buffered_move = None
+                elif c2:
+                    play_sfx("ui_select")
                     enter_tutorial_practice(idx + 1)
-                else:
+                    return
+                elif c3:
+                    play_sfx("ui_back")
                     exit_tutorial_practice()
                     ctx.current_state = STATE_TUTORIAL_STAGE2
-                return
-            elif c3:
-                play_sfx("ui_back")
-                exit_tutorial_practice()
-                ctx.current_state = STATE_TUTORIAL_STAGE2
-                return
+                    return
+            else:
+                bw_btn = 165
+                b1 = rl.Rectangle(w // 2 - 175, h // 2 + 40, bw_btn, 42)
+                b2 = rl.Rectangle(w // 2 + 10, h // 2 + 40, bw_btn, 42)
+
+                h1, c1 = check_button(b1)
+                h2, c2 = check_button(b2)
+
+                if h1: notify_hover("tut_won_b1")
+                elif h2: notify_hover("tut_won_b2")
+
+                draw_styled_button(b1, "CHƠI LẠI BÀI NÀY", 13, h1, accent_col=rl.Color(255, 215, 80, 255))
+                draw_styled_button(b2, "VỀ DANH SÁCH", 13, h2, accent_col=rl.Color(65, 245, 160, 255))
+
+                if c1:
+                    game.reset()
+                    play_sfx("reset")
+                    ctx.reset_camera()
+                    ctx.roll_animating = False
+                    ctx.buffered_move = None
+                elif c2:
+                    play_sfx("ui_back")
+                    exit_tutorial_practice()
+                    ctx.current_state = STATE_TUTORIAL_STAGE2
+                    return
 
         else:  # LOST
             rl.draw_rectangle_rounded_lines(mrect, 0.14, 8, rl.Color(255, 80, 85, 255))
