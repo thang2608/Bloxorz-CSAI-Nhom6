@@ -50,7 +50,7 @@ class AppContext:
         self.ai_move_queue = []
         self.ai_stats = None
         self.show_solvers_dropdown = False
-        self.solver_names = ["A*", "BFS", "DFS", "UCS", "IDS"]
+        self.solver_names = ["A*", "BFS", "DFS", "UCS"]
 
     def reset_camera(self):
         """Căn chỉnh camera tự động bao quát chính giữa bàn cờ hiện tại"""
