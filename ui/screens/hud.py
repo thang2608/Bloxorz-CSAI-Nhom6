@@ -1,11 +1,14 @@
 # ui/screens/hud.py
 """
 Bloxorz 3D - Bảng điều khiển 2D HUD (Heads-Up Display)
-Hiển thị thông tin màn chơi, số bước, dropdown chọn thuật toán AI, phím tắt và Modal Thắng/Thua.
+Hiển thị thông tin màn chơi, số bước, Skin hiện tại, dropdown chọn thuật toán AI, phím tắt và Modal Thắng/Thua.
 """
 
 import pyray as rl
-from config import LEVEL_NAMES_VI, STATE_MENU, STATE_LEVEL_SELECT
+from config import (
+    LEVEL_NAMES_VI, STATE_MENU, STATE_LEVEL_SELECT,
+    BLOCK_SKINS, get_skin_accent_color
+)
 from app_state import ctx
 from ui.font_manager import draw_text_ui, measure_text_ui
 from ui.widgets import check_button, draw_styled_button
@@ -14,29 +17,49 @@ from audio_manager import play_sfx, toggle_bgm, is_bgm_enabled, notify_hover
 
 
 def draw_2d_hud():
-    """Bảng thông tin khi đang chơi, nút Menu, Dropdown Solvers, Nút Nhạc và Modal Thắng/Thua"""
+    """Bảng thông tin khi đang chơi, nút Skin, nút Menu, Dropdown Solvers, Nút Nhạc và Modal Thắng/Thua"""
     game = ctx.game
     w = rl.get_screen_width()
     h = rl.get_screen_height()
 
     clean_name = LEVEL_NAMES_VI[game.level_index] if game.level_index < len(LEVEL_NAMES_VI) else f"Màn {game.level_index + 1}"
+    cur_skin = ctx.get_current_skin()
+    skin_accent = get_skin_accent_color(ctx.current_skin_idx, ctx.spin_timer)
 
-    # Card thông tin góc trái
-    card_rect = rl.Rectangle(24, 20, 340, 96)
+    # Card thông tin góc trái (hiển thị cả tên màn, bước đi và tên Skin hiện tại)
+    card_rect = rl.Rectangle(24, 20, 355, 116)
     rl.draw_rectangle_rounded(card_rect, 0.16, 8, rl.Color(14, 28, 38, 225))
     rl.draw_rectangle_rounded_lines(card_rect, 0.16, 8, rl.Color(0, 240, 245, 140))
 
     # Vệt phản chiếu ánh sáng thủy tinh (Glass highlight)
-    c_hl = rl.Rectangle(26, 22, 336, 38)
+    c_hl = rl.Rectangle(26, 22, 351, 38)
     rl.draw_rectangle_rounded(c_hl, 0.16, 8, rl.Color(255, 255, 255, 10))
 
-    draw_text_ui("BLOXORZ 3D", 40, 30, 22, rl.Color(255, 215, 80, 255), is_bold=True, shadow=True, glow=True, glow_color=rl.Color(255, 195, 50, 40))
+    draw_text_ui("BLOXORZ 3D", 40, 28, 22, rl.Color(255, 215, 80, 255), is_bold=True, shadow=True, glow=True, glow_color=rl.Color(255, 195, 50, 40))
     lvl_info = f"MÀN {game.level_index + 1:02d}  ·  {clean_name}"
     lvl_sz = 14
-    while measure_text_ui(lvl_info, lvl_sz, is_bold=True) > 300 and lvl_sz > 11:
+    while measure_text_ui(lvl_info, lvl_sz, is_bold=True) > 315 and lvl_sz > 11:
         lvl_sz -= 1
-    draw_text_ui(lvl_info, 40, 58, lvl_sz, rl.Color(220, 240, 250, 255), is_bold=True)
-    draw_text_ui(f"BƯỚC ĐI: {game.moves}", 40, 82, 18, rl.Color(0, 240, 245, 255), is_bold=True, glow=True)
+    draw_text_ui(lvl_info, 40, 56, lvl_sz, rl.Color(220, 240, 250, 255), is_bold=True)
+    draw_text_ui(f"BƯỚC ĐI: {game.moves}", 40, 78, 17, rl.Color(0, 240, 245, 255), is_bold=True, glow=True)
+
+    # Nhãn Skin hiện tại ngay trong thẻ thông tin góc trái
+    skin_info_txt = f"SKIN: {cur_skin['name']} (B)"
+    skin_sz = 12
+    while measure_text_ui(skin_info_txt, skin_sz, is_bold=True) > 320 and skin_sz > 10:
+        skin_sz -= 1
+    draw_text_ui(skin_info_txt, 40, 104, skin_sz, skin_accent, is_bold=True)
+
+    # ── [NÚT ĐỔI SKIN NHANH (B)] ─────────────────────────────────
+    btn_skin = rl.Rectangle(w - 585, 24, 135, 40)
+    h_skin, c_skin = check_button(btn_skin)
+    if h_skin:
+        notify_hover("hud_btn_skin")
+    skin_btn_lbl = f"SKIN {ctx.current_skin_idx + 1}/{len(BLOCK_SKINS)} (B)"
+    draw_styled_button(btn_skin, skin_btn_lbl, 13, h_skin, active=False, accent_col=skin_accent)
+    if c_skin:
+        ctx.cycle_skin(1)
+        play_sfx("ui_select")
 
     # ── [NÚT BẬT/TẮT NHẠC NỀN] ─────────────────────────────────
     btn_sound = rl.Rectangle(w - 440, 24, 135, 40)
@@ -127,13 +150,13 @@ def draw_2d_hud():
         ctx.ai_move_queue.clear()
         ctx.current_state = STATE_MENU
 
-    # Thanh điều khiển đáy màn hình
-    bar_w = min(w - 40, 960)
+    # Thanh điều khiển đáy màn hình (có bổ sung [B]: Đổi Skin)
+    bar_w = min(w - 30, 1020)
     bar_rect = rl.Rectangle(w // 2 - bar_w // 2, h - 46, bar_w, 34)
     rl.draw_rectangle_rounded(bar_rect, 0.45, 8, rl.Color(14, 28, 38, 215))
     rl.draw_rectangle_rounded_lines(bar_rect, 0.45, 8, rl.Color(65, 90, 110, 160))
 
-    ctrl_text = f"[W/A/S/D]: Lăn khối  ·  [M]: Nhạc nền  ·  [H]: AI Giải ({cur_algo})  ·  [Tab]: Đổi thuật toán  ·  [Z]: Hoàn tác  ·  [Space]: Đổi khối  ·  [R]: Chơi lại"
+    ctrl_text = f"[W/A/S/D]: Lăn khối  ·  [B]: Đổi Skin  ·  [M]: Nhạc nền  ·  [H]: AI Giải ({cur_algo})  ·  [Tab]: Đổi AI  ·  [Z]: Hoàn tác  ·  [Space]: Đổi khối  ·  [R]: Chơi lại"
     ctrl_sz = 13
     text_w = measure_text_ui(ctrl_text, ctrl_sz, is_bold=False)
     while text_w > bar_w - 20 and ctrl_sz > 10:

@@ -15,13 +15,14 @@ from levels import LEVELS
 from config import (
     SCREEN_WIDTH, SCREEN_HEIGHT, BG_COLOR,
     STATE_PLAYING, STATE_MENU, STATE_LEVEL_SELECT,
-    STATE_TUTORIAL_STAGE1, STATE_TUTORIAL_STAGE2, STATE_TUTORIAL_PRACTICE
+    STATE_TUTORIAL_STAGE1, STATE_TUTORIAL_STAGE2, STATE_TUTORIAL_PRACTICE,
+    BLOCK_SKINS
 )
 from app_state import ctx
 from ui.font_manager import init_fonts
 from ui.widgets import draw_cinematic_vignette
-from ui.effects import draw_cosmic_space_backdrop
-from ui.render3d import draw_3d_scene
+from ui.effects import draw_cosmic_space_backdrop, spawn_impact_sparks
+from ui.render3d import draw_3d_scene, draw_deluxe_block, draw_rolling_block
 from ui.animation import perform_move, update_roll_animation
 from ai_controller import trigger_ai_solve, cycle_solver
 from ui.screens.menu_screen import draw_menu_screen, draw_menu_3d_showcase
@@ -35,8 +36,13 @@ from audio_manager import (
     init_audio, close_audio, update_music, play_sfx, toggle_bgm, toggle_sfx
 )
 
+# Biến toàn cục đồng bộ trực tiếp với ctx.current_skin_idx
+current_skin_idx = 0
+
 
 def main():
+    global current_skin_idx
+
     # ── 1. Khởi tạo Cửa sổ & Đồ họa Raylib ──
     rl.init_window(SCREEN_WIDTH, SCREEN_HEIGHT, "Bloxorz 3D - AI Solver Edition")
     rl.set_target_fps(60)
@@ -60,11 +66,17 @@ def main():
         # Cập nhật luồng nhạc nền liên tục
         update_music()
 
-        # Phím tắt toàn cục: [M] Bật/tắt nhạc nền, [K] Bật/tắt SFX
+        # Phím tắt toàn cục: [M] Bật/tắt nhạc nền, [K] Bật/tắt SFX, [B] Đổi Skin 3D
         if rl.is_key_pressed(rl.KEY_M):
             toggle_bgm()
         if rl.is_key_pressed(rl.KEY_K):
             toggle_sfx()
+        if rl.is_key_pressed(rl.KEY_B):
+            current_skin_idx = ctx.cycle_skin(1)
+            play_sfx("ui_select")
+
+        # Giữ đồng bộ biến toàn cục current_skin_idx khi đổi bằng nút bấm trên UI
+        current_skin_idx = ctx.current_skin_idx
 
         # ── Phím ESC: Điều hướng trạng thái thông minh ──
         if rl.is_key_pressed(rl.KEY_ESCAPE):

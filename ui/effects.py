@@ -6,6 +6,7 @@ try:
 except ImportError:
     from raylib import pyray as rl
 
+from config import BLOCK_SKINS, get_skin_spark_rgb
 from app_state import ctx
 from ui.widgets import draw_star_circle
 
@@ -92,7 +93,8 @@ def draw_starfield():
 particles = []
 
 def spawn_impact_sparks(x, z, count=16, is_gold=True):
-    """Phát ra chùm tia lửa & bụi năng lượng khi khối đập xuống sàn"""
+    """Phát ra chùm tia lửa & bụi năng lượng khi khối đập xuống sàn, tự động lấy màu spark_col của Skin hiện tại"""
+    base_spark_col = get_skin_spark_rgb(ctx.current_skin_idx, ctx.spin_timer)
     for _ in range(count):
         ang = random.uniform(0.0, 2.0 * math.pi)
         spd = random.uniform(1.2, 3.2)
@@ -100,13 +102,12 @@ def spawn_impact_sparks(x, z, count=16, is_gold=True):
         vz = math.sin(ang) * spd
         vy = random.uniform(1.2, 3.2)
         life = random.uniform(0.28, 0.52)
-        col = (255, 220, 90) if is_gold else (0, 245, 255)
         particles.append({
             "x": x, "y": 0.05, "z": z,
             "vx": vx, "vy": vy, "vz": vz,
             "life": life, "max_life": life,
             "sz": random.uniform(0.08, 0.14),
-            "col": col
+            "col": base_spark_col
         })
 
 

@@ -1,4 +1,4 @@
-# app_state.py — Ngữ cảnh tập trung quản lý State, Game instance, Camera và Animation
+# app_state.py — Ngữ cảnh tập trung quản lý State, Game instance, Camera, Skin và Animation
 import math
 try:
     import pyray as rl
@@ -6,7 +6,7 @@ except ImportError:
     from raylib import pyray as rl
 
 from game import BloxorzGame
-from config import STATE_MENU, STATE_PLAYING
+from config import STATE_MENU, STATE_PLAYING, BLOCK_SKINS
 
 class AppContext:
     def __init__(self):
@@ -51,6 +51,18 @@ class AppContext:
         self.ai_stats = None
         self.show_solvers_dropdown = False
         self.solver_names = ["A*", "BFS", "DFS", "UCS", "IDS"]
+
+        # 6. Hệ thống 6 Skin Khối 3D Cao Cấp
+        self.current_skin_idx = 0
+
+    def cycle_skin(self, step=1):
+        """Chuyển đổi qua lại giữa 6 Skin khối 3D"""
+        self.current_skin_idx = (self.current_skin_idx + step) % len(BLOCK_SKINS)
+        return self.current_skin_idx
+
+    def get_current_skin(self):
+        """Trả về dict cấu hình của Skin đang được chọn"""
+        return BLOCK_SKINS[self.current_skin_idx % len(BLOCK_SKINS)]
 
     def reset_camera(self):
         """Căn chỉnh camera tự động bao quát chính giữa bàn cờ hiện tại"""
