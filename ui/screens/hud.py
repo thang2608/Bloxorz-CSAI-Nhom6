@@ -10,10 +10,11 @@ from app_state import ctx
 from ui.font_manager import draw_text_ui, measure_text_ui
 from ui.widgets import check_button, draw_styled_button
 from ai_controller import trigger_ai_solve
+from audio_manager import play_sfx, toggle_bgm, is_bgm_enabled, notify_hover
 
 
 def draw_2d_hud():
-    """Bảng thông tin khi đang chơi, nút Menu, Dropdown Solvers và Modal Thắng/Thua"""
+    """Bảng thông tin khi đang chơi, nút Menu, Dropdown Solvers, Nút Nhạc và Modal Thắng/Thua"""
     game = ctx.game
     w = rl.get_screen_width()
     h = rl.get_screen_height()
@@ -30,24 +31,48 @@ def draw_2d_hud():
     rl.draw_rectangle_rounded(c_hl, 0.16, 8, rl.Color(255, 255, 255, 10))
 
     draw_text_ui("BLOXORZ 3D", 40, 30, 22, rl.Color(255, 215, 80, 255), is_bold=True, shadow=True, glow=True, glow_color=rl.Color(255, 195, 50, 40))
-    draw_text_ui(f"MÀN {game.level_index + 1:02d}  ·  {clean_name}", 40, 58, 14, rl.Color(220, 240, 250, 255), is_bold=True)
+    lvl_info = f"MÀN {game.level_index + 1:02d}  ·  {clean_name}"
+    lvl_sz = 14
+    while measure_text_ui(lvl_info, lvl_sz, is_bold=True) > 300 and lvl_sz > 11:
+        lvl_sz -= 1
+    draw_text_ui(lvl_info, 40, 58, lvl_sz, rl.Color(220, 240, 250, 255), is_bold=True)
     draw_text_ui(f"BƯỚC ĐI: {game.moves}", 40, 82, 18, rl.Color(0, 240, 245, 255), is_bold=True, glow=True)
+
+    # ── [NÚT BẬT/TẮT NHẠC NỀN] ─────────────────────────────────
+    btn_sound = rl.Rectangle(w - 440, 24, 135, 40)
+    h_sound, c_sound = check_button(btn_sound)
+    if h_sound:
+        notify_hover("hud_btn_sound")
+
+    music_on = is_bgm_enabled()
+    snd_label = "NHẠC: BẬT (M)" if music_on else "NHẠC: TẮT (M)"
+    snd_col = rl.Color(0, 240, 245, 255) if music_on else rl.Color(255, 80, 85, 255)
+    draw_styled_button(btn_sound, snd_label, 13, h_sound, active=music_on, accent_col=snd_col)
+    if c_sound:
+        toggle_bgm()
+        play_sfx("ui_select")
 
     # ── [NÚT SOLVERS DROPDOWN] ─────────────────────────────────
     btn_solvers = rl.Rectangle(w - 295, 24, 135, 40)
     h_solvers, c_solvers = check_button(btn_solvers)
+    if h_solvers:
+        notify_hover("hud_btn_solvers")
 
-    # Nếu AI đang tự chạy thì hiện nút "DỪNG THUẬT TOÁN", ngược lại hiện "SOLVERS ▼"
+    cur_algo = ctx.solver_names[ctx.current_solver_idx]
+
+    # Nếu AI đang tự chạy thì hiện nút "DỪNG AI (H)", ngược lại hiện "AI: Tên ▼"
     if ctx.ai_move_queue:
-        solvers_label = "DỪNG THUẬT TOÁN"
+        solvers_label = "DỪNG AI (H)"
         draw_styled_button(btn_solvers, solvers_label, 14, h_solvers, active=True, accent_col=rl.Color(255, 80, 85, 255))
         if c_solvers:
+            play_sfx("ui_back")
             ctx.ai_move_queue.clear()
     else:
         arrow = "▲" if ctx.show_solvers_dropdown else "▼"
-        solvers_label = f"SOLVERS {arrow}"
+        solvers_label = f"AI: {cur_algo} {arrow}"
         draw_styled_button(btn_solvers, solvers_label, 14, h_solvers, active=ctx.show_solvers_dropdown, accent_col=rl.Color(65, 245, 160, 255))
         if c_solvers:
+            play_sfx("ui_select")
             ctx.show_solvers_dropdown = not ctx.show_solvers_dropdown
 
     # Vẽ danh sách menu xổ xuống khi show_solvers_dropdown = True
@@ -64,15 +89,25 @@ def draw_2d_hud():
         for idx, name in enumerate(ctx.solver_names):
             item_rect = rl.Rectangle(w - 290, 72 + idx * (item_h + 4), 125, item_h)
             h_item, c_item = check_button(item_rect)
+            if h_item:
+                notify_hover(f"hud_solver_{idx}")
+
+            # Highlight làm sáng thuật toán đang được chọn (active)
+            is_active = (idx == ctx.current_solver_idx)
+            item_label = f"● {name}" if is_active else name
+            item_accent = rl.Color(255, 215, 80, 255) if is_active else rl.Color(0, 240, 245, 255)
+
             draw_styled_button(
                 item_rect,
-                name,
+                item_label,
                 14,
                 h_item,
-                accent_col=rl.Color(0, 240, 245, 255)
+                active=is_active,
+                accent_col=item_accent
             )
-            # Click vào thuật toán nào -> chạy ngay thuật toán đó!
+            # Click vào thuật toán nào -> chọn và chạy ngay thuật toán đó!
             if c_item:
+                play_sfx("ui_select")
                 trigger_ai_solve(name)
 
         # Tự động đóng menu nếu người chơi click chuột ra ngoài vùng menu
@@ -84,8 +119,11 @@ def draw_2d_hud():
     # Nút [MENU (ESC)] ở góc trên bên phải
     btn_menu_top = rl.Rectangle(w - 150, 24, 126, 40)
     h_mtop, c_mtop = check_button(btn_menu_top)
+    if h_mtop:
+        notify_hover("hud_btn_menu_top")
     draw_styled_button(btn_menu_top, "MENU (ESC)", 15, h_mtop, accent_col=rl.Color(255, 215, 80, 255))
     if c_mtop:
+        play_sfx("ui_back")
         ctx.ai_move_queue.clear()
         ctx.current_state = STATE_MENU
 
@@ -95,9 +133,13 @@ def draw_2d_hud():
     rl.draw_rectangle_rounded(bar_rect, 0.45, 8, rl.Color(14, 28, 38, 215))
     rl.draw_rectangle_rounded_lines(bar_rect, 0.45, 8, rl.Color(65, 90, 110, 160))
 
-    ctrl_text = "[W/A/S/D]: Lăn khối  ·  [H]: AI Giải  ·  [Tab]: Đổi thuật toán  ·  [Z]: Hoàn tác  ·  [Space]: Đổi khối  ·  [R]: Chơi lại"
-    text_w = measure_text_ui(ctrl_text, 13, is_bold=False)
-    draw_text_ui(ctrl_text, w // 2 - text_w // 2, h - 38, 13, rl.Color(195, 225, 235, 255), is_bold=False)
+    ctrl_text = f"[W/A/S/D]: Lăn khối  ·  [M]: Nhạc nền  ·  [H]: AI Giải ({cur_algo})  ·  [Tab]: Đổi thuật toán  ·  [Z]: Hoàn tác  ·  [Space]: Đổi khối  ·  [R]: Chơi lại"
+    ctrl_sz = 13
+    text_w = measure_text_ui(ctrl_text, ctrl_sz, is_bold=False)
+    while text_w > bar_w - 20 and ctrl_sz > 10:
+        ctrl_sz -= 1
+        text_w = measure_text_ui(ctrl_text, ctrl_sz, is_bold=False)
+    draw_text_ui(ctrl_text, w // 2 - text_w // 2, h - 38, ctrl_sz, rl.Color(195, 225, 235, 255), is_bold=False)
 
     # Modal Thắng / Thua tương tác đầy đủ (chỉ hiện khi đã hoàn tất hoạt ảnh)
     if game.status in ("WON", "LOST") and not ctx.roll_animating:
@@ -125,20 +167,27 @@ def draw_2d_hud():
             h2, c2 = check_button(b2)
             h3, c3 = check_button(b3)
 
+            if h1: notify_hover("modal_won_b1")
+            elif h2: notify_hover("modal_won_b2")
+            elif h3: notify_hover("modal_won_b3")
+
             draw_styled_button(b1, "MÀN TIẾP (Space)", 13, h1, accent_col=rl.Color(65, 245, 160, 255))
             draw_styled_button(b2, "CHỌN MÀN", 14, h2)
             draw_styled_button(b3, "MENU CHÍNH", 14, h3)
 
             if c1:
+                play_sfx("ui_select")
                 game.next_level()
                 ctx.reset_camera()
                 ctx.roll_animating = False
                 ctx.buffered_move = None
             elif c2:
+                play_sfx("ui_select")
                 ctx.current_state = STATE_LEVEL_SELECT
                 ctx.roll_animating = False
                 ctx.buffered_move = None
             elif c3:
+                play_sfx("ui_back")
                 ctx.current_state = STATE_MENU
                 ctx.roll_animating = False
                 ctx.buffered_move = None
@@ -162,20 +211,27 @@ def draw_2d_hud():
             h2, c2 = check_button(b2)
             h3, c3 = check_button(b3)
 
+            if h1: notify_hover("modal_lost_b1")
+            elif h2: notify_hover("modal_lost_b2")
+            elif h3: notify_hover("modal_lost_b3")
+
             draw_styled_button(b1, "HOÀN TÁC (Z)", 14, h1, accent_col=rl.Color(0, 240, 245, 255))
             draw_styled_button(b2, "CHƠI LẠI (R)", 14, h2, accent_col=rl.Color(255, 215, 80, 255))
             draw_styled_button(b3, "MENU CHÍNH", 14, h3)
 
             if c1:
                 if game.undo():
+                    play_sfx("undo")
                     ctx.roll_animating = False
                     ctx.buffered_move = None
             elif c2:
                 game.reset()
+                play_sfx("reset")
                 ctx.reset_camera()
                 ctx.roll_animating = False
                 ctx.buffered_move = None
             elif c3:
+                play_sfx("ui_back")
                 ctx.current_state = STATE_MENU
                 ctx.roll_animating = False
                 ctx.buffered_move = None

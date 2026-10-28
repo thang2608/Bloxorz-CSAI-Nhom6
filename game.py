@@ -121,6 +121,7 @@ class BloxorzGame:
         self.lost_reason = None    # "FALL", "FRAGILE_BREAK", "BRIDGE_CLOSED"
         self.broken_tile = None    # [r, c] khi ô cam bị vỡ
         self.last_event = None     # "SPLIT", "MERGE", "SWITCH_TRIGGER", "UNDO", None
+        self.last_switch_type = None # "soft", "heavy", "split", None
         self.history = []          # Stack lưu lịch sử để hỗ trợ Undo (Hoàn tác)
 
     def _save_snapshot(self):
@@ -136,6 +137,7 @@ class BloxorzGame:
             "lost_reason": self.lost_reason,
             "broken_tile": copy.deepcopy(self.broken_tile),
             "last_event": self.last_event,
+            "last_switch_type": self.last_switch_type,
         }
         self.history.append(snapshot)
 
@@ -158,6 +160,7 @@ class BloxorzGame:
         self.lost_reason = snapshot["lost_reason"]
         self.broken_tile = snapshot["broken_tile"]
         self.last_event = "UNDO"
+        self.last_switch_type = snapshot.get("last_switch_type", None)
         return True
 
     def get_bridge_at(self, r, c):
@@ -204,6 +207,7 @@ class BloxorzGame:
                 elif action == "close":
                     self.bridges[bid]["is_open"] = False
         self.last_event = "SWITCH_TRIGGER"
+        self.last_switch_type = switch.get("type", "soft")
 
     def check_switches_for_block(self, block):
         """Kiểm tra va chạm công tắc khi đang là khối 1x1x2 nguyên bản"""
@@ -252,6 +256,7 @@ class BloxorzGame:
 
         dir_upper = direction.upper()
         self.last_event = None
+        self.last_switch_type = None
 
         # Chuyển đổi khối đang điều khiển (khi đang ở chế độ tách khối)
         if dir_upper == "SWITCH":

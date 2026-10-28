@@ -19,6 +19,7 @@ from ui.font_manager import draw_text_ui, measure_text_ui
 from ui.widgets import check_button, draw_styled_button, draw_keycap, draw_star_circle
 from ui.animation import get_block_target_transform
 from ui.effects import spawn_impact_sparks
+from audio_manager import play_sfx, notify_hover
 
 # ── 6 Bản đồ mini thực hành tương tác (TUTORIAL_LEVELS) ─────────
 TUTORIAL_LEVELS = [
@@ -287,13 +288,19 @@ def draw_tutorial_stage1(w, h):
     btn_next_rec = rl.Rectangle(w // 2 + 20, py + ph - 54, btn_w_nav, 42)
 
     h_back, c_back = check_button(btn_back_rec)
+    if h_back:
+        notify_hover("tut_s1_back")
     draw_styled_button(btn_back_rec, "< QUAY LẠI", 16, h_back)
     if c_back:
+        play_sfx("ui_back")
         ctx.current_state = STATE_MENU
 
     h_next, c_next = check_button(btn_next_rec)
+    if h_next:
+        notify_hover("tut_s1_next")
     draw_styled_button(btn_next_rec, "TIẾP TỤC >", 16, h_next, accent_col=rl.Color(65, 245, 160, 255))
     if c_next:
+        play_sfx("ui_select")
         ctx.current_state = STATE_TUTORIAL_STAGE2
 
 
@@ -409,22 +416,32 @@ def draw_tutorial_stage2(w, h):
         rl.draw_rectangle_rounded_lines(badge_rec, 0.40, 6, badge_col)
         draw_text_ui(badge_text, int(badge_rec.x + 8), int(badge_rec.y + 4), 12, badge_col, is_bold=True)
 
+        if hover:
+            notify_hover(f"tut_s2_card_{i}")
+
         if clicked:
+            play_sfx("ui_select")
             enter_tutorial_practice(i)
             return
 
     # Nút quay lại Stage 1
     btn_back = rl.Rectangle(w // 2 - 220, h - 58, 200, 42)
     h_b, c_b = check_button(btn_back)
+    if h_b:
+        notify_hover("tut_s2_back")
     draw_styled_button(btn_back, "< QUAY LẠI", 16, h_b)
     if c_b:
+        play_sfx("ui_back")
         ctx.current_state = STATE_TUTORIAL_STAGE1
 
     # Nút về Menu chính
     btn_menu = rl.Rectangle(w // 2 + 20, h - 58, 200, 42)
     h_m, c_m = check_button(btn_menu)
+    if h_m:
+        notify_hover("tut_s2_menu")
     draw_styled_button(btn_menu, "VỀ MENU CHÍNH", 16, h_m)
     if c_m:
+        play_sfx("ui_back")
         ctx.current_state = STATE_MENU
 
 
@@ -439,22 +456,34 @@ def draw_tutorial_practice_hud(w, h):
     game = ctx.game
 
     # ── 1. Panel thông tin bài học (Góc trên bên trái) ──
-    info_w = min(460, w - 210)
-    info_h = 112
+    info_w = min(540, w - 200)
+    info_h = 116
     info_rec = rl.Rectangle(14, 14, info_w, info_h)
     rl.draw_rectangle_rounded(info_rec, 0.14, 8, rl.Color(10, 22, 32, 235))
     rl.draw_rectangle_rounded_lines(info_rec, 0.14, 8, rl.Color(ar, ag, ab, 175))
     hl = rl.Rectangle(16, 16, info_w - 4, info_h * 0.35)
     rl.draw_rectangle_rounded(hl, 0.14, 8, rl.Color(255, 255, 255, 8))
 
+    avail_w = info_w - 24
+
     lesson_title = f"BÀI {idx + 1}/6: {card['name'].upper()}"
-    draw_text_ui(lesson_title, 26, 22, 17, accent, is_bold=True, shadow=True, glow=True, glow_color=rl.Color(ar, ag, ab, 45))
+    title_sz = 17
+    while measure_text_ui(lesson_title, title_sz, is_bold=True) > avail_w and title_sz > 12:
+        title_sz -= 1
+    draw_text_ui(lesson_title, 26, 22, title_sz, accent, is_bold=True, shadow=True, glow=True, glow_color=rl.Color(ar, ag, ab, 45))
 
     desc = TUTORIAL_LEVELS[idx].get("description", "")
-    draw_text_ui(desc, 26, 46, 13, rl.Color(210, 230, 240, 240))
+    desc_sz = 13
+    while measure_text_ui(desc, desc_sz, is_bold=False) > avail_w and desc_sz > 10:
+        desc_sz -= 1
+    draw_text_ui(desc, 26, 46, desc_sz, rl.Color(210, 230, 240, 240))
 
-    # Trạng thái trực tiếp theo thời gian thực
+    # Trạng thái trực tiếp theo thời gian thực (tự động căn chỉnh vừa vặn tuyệt đối)
     status_y = 68
+    st_text = ""
+    st_col = rl.Color(255, 255, 255, 255)
+    st_glow = False
+
     if idx == 0:  # Bài 1 — Sàn cam dễ vỡ
         if not game.is_split:
             if game.block.is_standing():
@@ -463,7 +492,6 @@ def draw_tutorial_practice_hud(w, h):
             else:
                 st_text = "Tư thế: NẰM — An toàn khi lăn qua sàn cam!"
                 st_col = rl.Color(65, 245, 160, 255)
-            draw_text_ui(st_text, 26, status_y, 13, st_col, is_bold=True)
     elif idx in (1, 2):  # Bài 2, 3 — Cầu & công tắc tròn
         has_bridge = bool(game.bridges)
         if has_bridge:
@@ -476,7 +504,7 @@ def draw_tutorial_practice_hud(w, h):
             else:
                 st_text = "TRẠNG THÁI CẦU: ĐANG ĐÓNG"
                 st_col = rl.Color(255, 80, 85, 255)
-            draw_text_ui(st_text, 26, status_y, 14, st_col, is_bold=True, glow=True)
+            st_glow = True
     elif idx == 3:  # Bài 4 — Công tắc chữ X
         bridge_open = any(b["is_open"] for b in game.bridges.values()) if game.bridges else False
         if bridge_open:
@@ -490,39 +518,48 @@ def draw_tutorial_practice_hud(w, h):
             else:
                 st_text = "TRẠNG THÁI CẦU: ĐANG ĐÓNG (Cần đứng thẳng trên ô X)"
                 st_col = rl.Color(255, 80, 85, 255)
-        draw_text_ui(st_text, 26, status_y, 13, st_col, is_bold=True)
     elif idx == 4:  # Bài 5 — Tách khối
         if game.is_split:
-            st_text = f"PHÂN THÂN (Khối {game.active_block + 1})  ·  [Space]: Đổi khối  ·  Đưa 2 khối qua cầu chạm nhau để gộp lại!"
+            st_text = f"PHÂN THÂN (Khối {game.active_block + 1})  ·  Đưa 2 khối qua cầu chạm nhau để gộp!"
             st_col = rl.Color(0, 230, 245, 255)
         else:
             st_text = "Lăn khối ĐỨNG THẲNG vào vòng tròn Cyan để tách thành 2 khối nhỏ"
             st_col = rl.Color(255, 215, 80, 255)
-        draw_text_ui(st_text, 26, status_y, 13, st_col, is_bold=True)
     elif idx == 5:  # Bài 6 — Hợp nhất khối
         if game.is_split:
-            st_text = f"PHÂN THÂN (Khối {game.active_block + 1})  ·  Di chuyển 2 khối lại sát cạnh nhau để tự động gộp!"
+            st_text = f"PHÂN THÂN (Khối {game.active_block + 1})  ·  Di chuyển 2 khối lại gần nhau để gộp!"
             st_col = rl.Color(185, 140, 245, 255)
         else:
             st_text = "ĐÃ GỘP KHỐI THÀNH CÔNG! Lăn khối lớn vào ô đích!"
             st_col = rl.Color(65, 245, 160, 255)
-        draw_text_ui(st_text, 26, status_y, 13, st_col, is_bold=True)
 
-    draw_text_ui(f"BƯỚC: {game.moves}", 26, status_y + 20, 14, rl.Color(0, 240, 245, 255), is_bold=True)
+    if st_text:
+        st_sz = 14 if idx in (1, 2) else 13
+        while measure_text_ui(st_text, st_sz, is_bold=True) > avail_w and st_sz > 10:
+            st_sz -= 1
+        draw_text_ui(st_text, 26, status_y, st_sz, st_col, is_bold=True, glow=st_glow)
+
+    draw_text_ui(f"BƯỚC: {game.moves}", 26, status_y + 22, 14, rl.Color(0, 240, 245, 255), is_bold=True)
 
     # ── 2. Cụm nút chức năng góc trên bên phải ──
     btn_hint = rl.Rectangle(w - 170, 14, 155, 36)
     h_hint, c_hint = check_button(btn_hint)
+    if h_hint:
+        notify_hover("tut_prac_hint")
     hint_label = "ẨN GỢI Ý (H)" if ctx.show_tutorial_hint else "GỢI Ý (H)"
     draw_styled_button(btn_hint, hint_label, 14, h_hint, active=ctx.show_tutorial_hint, accent_col=rl.Color(255, 195, 80, 255))
     if c_hint:
+        play_sfx("ui_select")
         ctx.show_tutorial_hint = not ctx.show_tutorial_hint
 
     btn_reset = rl.Rectangle(w - 170, 56, 155, 36)
     h_rs, c_rs = check_button(btn_reset)
+    if h_rs:
+        notify_hover("tut_prac_reset")
     draw_styled_button(btn_reset, "CHƠI LẠI (R)", 14, h_rs)
     if c_rs:
         game.reset()
+        play_sfx("reset")
         ctx.reset_camera()
         ctx.roll_animating = False
         ctx.buffered_move = None
@@ -589,6 +626,10 @@ def draw_tutorial_practice_hud(w, h):
             h2, c2 = check_button(b2)
             h3, c3 = check_button(b3)
 
+            if h1: notify_hover("tut_won_b1")
+            elif h2: notify_hover("tut_won_b2")
+            elif h3: notify_hover("tut_won_b3")
+
             draw_styled_button(b1, "CHƠI LẠI BÀI NÀY", 12, h1, accent_col=rl.Color(255, 215, 80, 255))
             next_label = "BÀI TIẾP THEO >" if idx < 5 else "VỀ DANH SÁCH"
             draw_styled_button(b2, next_label, 13, h2, accent_col=rl.Color(65, 245, 160, 255))
@@ -596,10 +637,12 @@ def draw_tutorial_practice_hud(w, h):
 
             if c1:
                 game.reset()
+                play_sfx("reset")
                 ctx.reset_camera()
                 ctx.roll_animating = False
                 ctx.buffered_move = None
             elif c2:
+                play_sfx("ui_select")
                 if idx < 5:
                     enter_tutorial_practice(idx + 1)
                 else:
@@ -607,6 +650,7 @@ def draw_tutorial_practice_hud(w, h):
                     ctx.current_state = STATE_TUTORIAL_STAGE2
                 return
             elif c3:
+                play_sfx("ui_back")
                 exit_tutorial_practice()
                 ctx.current_state = STATE_TUTORIAL_STAGE2
                 return
@@ -634,15 +678,20 @@ def draw_tutorial_practice_hud(w, h):
             h1, c1 = check_button(b1)
             h2, c2 = check_button(b2)
 
+            if h1: notify_hover("tut_lost_b1")
+            elif h2: notify_hover("tut_lost_b2")
+
             draw_styled_button(b1, "HOÀN TÁC (Z)", 14, h1, accent_col=rl.Color(0, 240, 245, 255))
             draw_styled_button(b2, "THỬ LẠI (R)", 14, h2, accent_col=rl.Color(255, 215, 80, 255))
 
             if c1:
                 if game.undo():
+                    play_sfx("undo")
                     ctx.roll_animating = False
                     ctx.buffered_move = None
             elif c2:
                 game.reset()
+                play_sfx("reset")
                 ctx.reset_camera()
                 ctx.roll_animating = False
                 ctx.buffered_move = None

@@ -24,12 +24,15 @@ from ui.effects import draw_cosmic_space_backdrop
 from ui.render3d import draw_3d_scene
 from ui.animation import perform_move, update_roll_animation
 from ai_controller import trigger_ai_solve, cycle_solver
-from ui.screens.menu_screen import draw_menu_screen
+from ui.screens.menu_screen import draw_menu_screen, draw_menu_3d_showcase
 from ui.screens.level_select import draw_level_select_screen
 from ui.screens.hud import draw_2d_hud
 from ui.screens.tutorial import (
     draw_tutorial_stage1, draw_tutorial_stage2, draw_tutorial_practice_hud,
     enter_tutorial_practice, exit_tutorial_practice
+)
+from audio_manager import (
+    init_audio, close_audio, update_music, play_sfx, toggle_bgm, toggle_sfx
 )
 
 
@@ -42,6 +45,9 @@ def main():
     # Nạp font chữ tiếng Việt có dấu
     init_fonts()
 
+    # Khởi tạo hệ thống âm thanh & BGM
+    init_audio()
+
     # Khởi tạo góc nhìn Camera ban đầu
     ctx.reset_camera()
 
@@ -51,8 +57,18 @@ def main():
         ctx.spin_timer += dt
         game = ctx.game
 
+        # Cập nhật luồng nhạc nền liên tục
+        update_music()
+
+        # Phím tắt toàn cục: [M] Bật/tắt nhạc nền, [K] Bật/tắt SFX
+        if rl.is_key_pressed(rl.KEY_M):
+            toggle_bgm()
+        if rl.is_key_pressed(rl.KEY_K):
+            toggle_sfx()
+
         # ── Phím ESC: Điều hướng trạng thái thông minh ──
         if rl.is_key_pressed(rl.KEY_ESCAPE):
+            play_sfx("ui_back")
             ctx.ai_move_queue.clear()
             if ctx.current_state == STATE_PLAYING:
                 ctx.current_state = STATE_MENU
@@ -79,12 +95,14 @@ def main():
                 if not is_tut:
                     if (rl.is_key_pressed(rl.KEY_SPACE) or rl.is_key_pressed(rl.KEY_ENTER) or
                             rl.is_key_pressed(rl.KEY_N)):
+                        play_sfx("ui_select")
                         game.next_level()
                         ctx.reset_camera()
                         ctx.roll_animating = False
                         ctx.buffered_move = None
                 else:
                     if rl.is_key_pressed(rl.KEY_SPACE) or rl.is_key_pressed(rl.KEY_ENTER):
+                        play_sfx("ui_select")
                         if ctx.current_tutorial_idx < 5:
                             enter_tutorial_practice(ctx.current_tutorial_idx + 1)
                         else:
@@ -96,12 +114,14 @@ def main():
                 ctx.ai_move_queue.clear()
                 if (rl.is_key_pressed(rl.KEY_SPACE) or rl.is_key_pressed(rl.KEY_ENTER) or
                         rl.is_key_pressed(rl.KEY_R)):
+                    play_sfx("reset")
                     game.reset()
                     ctx.reset_camera()
                     ctx.roll_animating = False
                     ctx.buffered_move = None
                 elif rl.is_key_pressed(rl.KEY_Z) or rl.is_key_pressed(rl.KEY_BACKSPACE):
                     if game.undo():
+                        play_sfx("undo")
                         ctx.roll_animating = False
                         ctx.buffered_move = None
 
@@ -126,28 +146,29 @@ def main():
                     else:
                         trigger_ai_solve()
                 elif rl.is_key_pressed(rl.KEY_TAB) and not is_tut:
-                    if not game.is_split:
-                        cycle_solver()
-                    else:
-                        if not ctx.roll_animating:
-                            game.move("SWITCH")
+                    cycle_solver()
+                    play_sfx("ui_nav")
                 elif rl.is_key_pressed(rl.KEY_SPACE):
                     if game.is_split and not ctx.roll_animating:
                         game.move("SWITCH")
+                        play_sfx("block_swap")
                 elif rl.is_key_pressed(rl.KEY_Z) or rl.is_key_pressed(rl.KEY_BACKSPACE):
                     ctx.ai_move_queue.clear()
                     if game.undo():
+                        play_sfx("undo")
                         ctx.roll_animating = False
                         ctx.buffered_move = None
                 elif rl.is_key_pressed(rl.KEY_R):
                     ctx.ai_move_queue.clear()
                     game.reset()
+                    play_sfx("reset")
                     ctx.reset_camera()
                     ctx.roll_animating = False
                     ctx.buffered_move = None
                 elif not is_tut and rl.is_key_pressed(rl.KEY_N):
                     ctx.ai_move_queue.clear()
                     game.next_level()
+                    play_sfx("ui_select")
                     ctx.reset_camera()
                     ctx.roll_animating = False
                     ctx.buffered_move = None
@@ -155,6 +176,7 @@ def main():
                     ctx.ai_move_queue.clear()
                     prev_i = (game.level_index - 1) % len(LEVELS)
                     game.load_level(prev_i)
+                    play_sfx("ui_select")
                     ctx.reset_camera()
                     ctx.roll_animating = False
                     ctx.buffered_move = None
@@ -172,6 +194,7 @@ def main():
                     next_ai_action = ctx.ai_move_queue.pop(0)
                     if next_ai_action == "SWITCH":
                         game.move("SWITCH")
+                        play_sfx("block_swap")
                     else:
                         perform_move(next_ai_action)
 
@@ -199,17 +222,39 @@ def main():
             ctx.cam_dist += (ctx.target_dist - ctx.cam_dist) * damping
 
         else:
-            # Khi ở Menu / Bảng chọn màn / Hướng dẫn: Khóa Camera tĩnh tuyệt đối
-            default_dist = max(game.rows, game.cols) * 1.48 + 4.0
-            ctx.target_yaw = -25.0
-            ctx.target_pitch = 48.0
-            ctx.target_dist = default_dist
-            ctx.cam_yaw = -25.0
-            ctx.cam_pitch = 48.0
-            ctx.cam_dist = default_dist
+            if ctx.current_state == STATE_MENU:
+                # Camera đặc biệt cho Menu: Nhìn vào gốc tọa độ, dịch sang phải
+                # để khối 3D trưng bày nằm ở nửa bên phải màn hình
+                ctx.target_yaw = -25.0
+                ctx.target_pitch = 32.0
+                ctx.target_dist = 12.0
+                ctx.cam_yaw = -25.0
+                ctx.cam_pitch = 32.0
+                ctx.cam_dist = 12.0
+            else:
+                # Khi ở Bảng chọn màn / Hướng dẫn: Khóa Camera tĩnh tuyệt đối
+                default_dist = max(game.rows, game.cols) * 1.48 + 4.0
+                ctx.target_yaw = -25.0
+                ctx.target_pitch = 48.0
+                ctx.target_dist = default_dist
+                ctx.cam_yaw = -25.0
+                ctx.cam_pitch = 48.0
+                ctx.cam_dist = default_dist
 
         # ── B. Cập nhật Tọa độ Camera Orbital ──
-        ctx.update_camera_coords()
+        if ctx.current_state == STATE_MENU:
+            # Camera cho menu: target dịch sang trái để khối 3D ở nửa phải màn hình
+            import math as _math
+            _rad_yaw = _math.radians(ctx.cam_yaw)
+            _rad_pitch = _math.radians(ctx.cam_pitch)
+            # Dịch camera target sang trái theo hướng nhìn để vật thể tại (0,0,0) hiện ở nửa phải
+            ctx.camera.target = rl.Vector3(-3.5, -0.5, 0.0)
+            _eye_x = -3.5 + ctx.cam_dist * _math.cos(_rad_pitch) * _math.sin(_rad_yaw)
+            _eye_y = -0.5 + ctx.cam_dist * _math.sin(_rad_pitch)
+            _eye_z = 0.0 + ctx.cam_dist * _math.cos(_rad_pitch) * _math.cos(_rad_yaw)
+            ctx.camera.position = rl.Vector3(_eye_x, _eye_y, _eye_z)
+        else:
+            ctx.update_camera_coords()
 
         # ── C. Cập nhật Hoạt ảnh Lật Vật lý 3D ──
         update_roll_animation(dt)
@@ -226,7 +271,11 @@ def main():
 
         # Không gian 3D
         rl.begin_mode_3d(ctx.camera)
-        draw_3d_scene(dt)
+        if ctx.current_state == STATE_MENU:
+            # Chỉ vẽ khối trưng bày showcase, không vẽ bàn cờ game
+            draw_menu_3d_showcase(dt)
+        else:
+            draw_3d_scene(dt)
         rl.end_mode_3d()
 
         # Giao diện tương ứng với State
@@ -247,6 +296,7 @@ def main():
 
         rl.end_drawing()
 
+    close_audio()
     rl.close_window()
 
 
