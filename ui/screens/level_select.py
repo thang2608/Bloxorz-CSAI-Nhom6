@@ -10,6 +10,7 @@ from config import LEVEL_NAMES_VI, STATE_MENU
 from app_state import ctx
 from ui.font_manager import draw_text_ui, measure_text_ui
 from ui.widgets import check_button, draw_styled_button
+from audio_manager import play_sfx, notify_hover
 
 
 def draw_level_select_screen(w, h):
@@ -45,8 +46,11 @@ def draw_level_select_screen(w, h):
         crec = rl.Rectangle(cx, cy, card_w, card_h)
         is_cur = (i == ctx.game.level_index)
         hover, clicked = check_button(crec)
+        if hover:
+            notify_hover(f"lvl_card_{i}")
 
         if clicked:
+            play_sfx("ui_select")
             ctx.load_and_play_level(i)
             return
 
@@ -77,7 +81,10 @@ def draw_level_select_screen(w, h):
 
         pill_col = rl.Color(255, 210, 75, 255) if is_cur else rl.Color(0, 240, 245, 255)
         draw_text_ui(lvl_num_text, cx + 16, cy + 14, 16, pill_col, is_bold=True, shadow=True)
-        draw_text_ui(lvl_name_text, cx + 16, cy + 38, 14, rl.Color(225, 240, 250, 255), is_bold=True)
+        name_sz = 14
+        while measure_text_ui(lvl_name_text, name_sz, is_bold=True) > (card_w - 28) and name_sz > 11:
+            name_sz -= 1
+        draw_text_ui(lvl_name_text, cx + 16, cy + 38, name_sz, rl.Color(225, 240, 250, 255), is_bold=True)
 
         status_tag = "ĐANG CHƠI" if is_cur else "VÀO CHƠI"
         tag_col = rl.Color(65, 245, 160, 255) if is_cur else rl.Color(150, 185, 205, 200)
@@ -86,6 +93,9 @@ def draw_level_select_screen(w, h):
     # Nút quay lại Menu
     btn_back_rec = rl.Rectangle(w // 2 - 130, h - 68, 260, 44)
     h_back, c_back = check_button(btn_back_rec)
+    if h_back:
+        notify_hover("lvl_btn_back")
     draw_styled_button(btn_back_rec, "< QUAY LẠI MENU", 17, h_back)
     if c_back:
+        play_sfx("ui_back")
         ctx.current_state = STATE_MENU

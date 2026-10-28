@@ -39,7 +39,7 @@ chars = set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 `~!@
 vn_chars = "aáàảãạăắằẳẵặâấầẩẫậeéèẻẽẹêếềểễệiíìỉĩịoóòỏõọôốồổỗộơớờởỡợuúùủũụưứừửữựyýỳỷỹỵdđ"
 vn_chars += vn_chars.upper()
 chars.update(vn_chars)
-chars.update("·–—•+-/()▼▲↑↓←→")
+chars.update("·–—•+-/()▼▲↑↓←→●")
 VIETNAMESE_CODEPOINTS = sorted(list(set(ord(c) for c in chars)))
 
 

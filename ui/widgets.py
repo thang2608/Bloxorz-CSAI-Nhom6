@@ -46,10 +46,17 @@ def draw_styled_button(rec, text, font_size=18, is_hover=False, active=False, ac
     top_highlight = rl.Rectangle(rec.x + 2, rec.y + 2, rec.width - 4, rec.height * 0.40)
     rl.draw_rectangle_rounded(top_highlight, 0.28, 8, rl.Color(255, 255, 255, 12))
 
-    tw = measure_text_ui(text, font_size, is_bold=True)
+    # Tự động co cỡ chữ nếu chữ dài hơn chiều rộng nút (chống tràn viền tuyệt đối)
+    cur_size = font_size
+    tw = measure_text_ui(text, cur_size, is_bold=True)
+    max_w = rec.width - 12
+    while tw > max_w and cur_size > 10:
+        cur_size -= 1
+        tw = measure_text_ui(text, cur_size, is_bold=True)
+
     tx = int(rec.x + rec.width / 2 - tw / 2)
-    ty = int(rec.y + rec.height / 2 - font_size / 2)
-    draw_text_ui(text, tx, ty, font_size, text_col, is_bold=True, shadow=True, glow=is_hover, glow_color=rl.Color(ar, ag, ab, 50))
+    ty = int(rec.y + rec.height / 2 - cur_size / 2)
+    draw_text_ui(text, tx, ty, cur_size, text_col, is_bold=True, shadow=True, glow=is_hover, glow_color=rl.Color(ar, ag, ab, 50))
 
 
 def draw_keycap(x, y, w_key, h_key, label, font_size=14):

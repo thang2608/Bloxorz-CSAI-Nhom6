@@ -6,6 +6,47 @@ except ImportError:
 
 from app_state import ctx
 from ui.effects import spawn_impact_sparks
+from audio_manager import play_sfx
+
+
+def _play_move_sound(game):
+    """Phát hiệu ứng âm thanh tương ứng với kết quả của bước lăn khối"""
+    if game.status == "LOST":
+        if game.lost_reason == "FRAGILE_BREAK":
+            play_sfx("lose_break")
+        else:
+            play_sfx("lose_fall")
+    elif game.status == "WON":
+        play_sfx("level_win")
+    elif game.status == "PLAYING":
+        if game.last_event == "SPLIT":
+            play_sfx("block_split")
+        elif game.last_event == "MERGE":
+            play_sfx("block_merge")
+        elif game.last_event == "SWITCH_TRIGGER":
+            if getattr(game, "last_switch_type", "soft") == "heavy":
+                play_sfx("switch_heavy")
+            else:
+                play_sfx("switch_soft")
+        else:
+            if not game.is_split:
+                (r1, c1), (r2, c2) = game.block.state
+                tiles = [[r1, c1], [r2, c2]]
+                on_fragile = game.is_fragile(r1, c1) or game.is_fragile(r2, c2)
+                on_heavy_deny = (not game.block.is_standing()) and any(
+                    s.get("type") == "heavy" and s.get("pos") in tiles for s in game.switches
+                )
+            else:
+                mr, mc = game.mini_blocks[game.active_block]
+                on_fragile = game.is_fragile(mr, mc)
+                on_heavy_deny = False
+
+            if on_fragile:
+                play_sfx("fragile_warn")
+            elif on_heavy_deny:
+                play_sfx("switch_deny")
+            else:
+                play_sfx("block_roll")
 
 
 def grid_to_world(r, c, y=0.0):
@@ -126,6 +167,7 @@ def perform_move(move_dir):
         old_active_idx = ctx.game.active_block
 
     res = ctx.game.move(move_dir)
+    _play_move_sound(ctx.game)
 
     if res == "SPLIT" or ctx.game.last_event == "MERGE":
         ctx.roll_animating = False
