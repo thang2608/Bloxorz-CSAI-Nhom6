@@ -1,4 +1,5 @@
-# config.py — Hằng số cấu hình, Bảng màu Theme và State Enums
+# config.py — Hằng số cấu hình, Bảng màu Theme, Hệ thống 4 Skin Khối Đặc Đa Tầng và State Enums
+import math
 try:
     import pyray as rl
 except ImportError:
@@ -39,7 +40,7 @@ chars = set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 `~!@
 vn_chars = "aáàảãạăắằẳẵặâấầẩẫậeéèẻẽẹêếềểễệiíìỉĩịoóòỏõọôốồổỗộơớờởỡợuúùủũụưứừửữựyýỳỷỹỵdđ"
 vn_chars += vn_chars.upper()
 chars.update(vn_chars)
-chars.update("·–—•+-/()▼▲↑↓←→●")
+chars.update("·–—•+-/()▼▲↑↓←→●◆✦★")
 VIETNAMESE_CODEPOINTS = sorted(list(set(ord(c) for c in chars)))
 
 
@@ -79,3 +80,66 @@ MINI_IDLE_WIRE = rl.Color(255, 205, 110, 240)
 SWITCH_SOFT_COL = rl.Color(46, 225, 125, 255)
 SWITCH_HEAVY_COL = rl.Color(255, 75, 85, 255)
 SWITCH_SPLIT_COL = rl.Color(0, 230, 245, 255)
+
+
+# ══════════════════════════════════════════════════════════════════
+# HỆ THỐNG 4 SKIN KHỐI ĐẶC ĐA TẦNG (BLOCK_SKINS)
+# ══════════════════════════════════════════════════════════════════
+BLOCK_SKINS = [
+    {
+        "id": 0,
+        "name": "HOÀNG KIM NGUYÊN BẢN",
+        "subtitle": "Imperial Gold",
+        "spark_col": (255, 220, 90),
+        "accent_col": (255, 215, 80),
+    },
+    {
+        "id": 1,
+        "name": "NHAM THẠCH HỎA LONG",
+        "subtitle": "Molten Magma",
+        "spark_col": (255, 105, 20),
+        "accent_col": (255, 125, 30),
+    },
+    {
+        "id": 2,
+        "name": "CỰC QUANG ĐA SẮC",
+        "subtitle": "Prismatic Aurora",
+        "spark_col": (0, 245, 230),
+        "accent_col": (0, 245, 230),
+    },
+    {
+        "id": 3,
+        "name": "HẮC TINH HỐ ĐEN",
+        "subtitle": "Void Singularity",
+        "spark_col": (195, 85, 255),
+        "accent_col": (195, 85, 255),
+    },
+]
+
+
+def compute_aurora_rgb(spin_timer, offset=0.0):
+    """
+    Tính toán màu sắc động Cực Quang Đa Sắc (Cyan - Lục Bảo - Hồng Magenta - Tím Điện Tử)
+    theo pha phase = spin_timer * 3.0 + offset.
+    """
+    phase = spin_timer * 3.0 + offset
+    r = int(130 + 125 * math.sin(phase))
+    g = int(140 + 115 * math.sin(phase + 2.094))
+    b = int(185 + 70 * math.sin(phase + 4.188))
+    return (max(0, min(255, r)), max(0, min(255, g)), max(0, min(255, b)))
+
+
+def get_skin_spark_rgb(skin_idx, spin_timer=0.0):
+    """Lấy bộ 3 giá trị màu (R, G, B) cho hạt tia lửa tiếp đất theo Skin đang chọn"""
+    idx = skin_idx % len(BLOCK_SKINS)
+    return BLOCK_SKINS[idx]["spark_col"]
+
+
+def get_skin_accent_color(skin_idx, spin_timer=0.0, alpha=255):
+    """Lấy rl.Color chủ đạo của Skin hiện tại để hiển thị trên UI và vòng Halo"""
+    idx = skin_idx % len(BLOCK_SKINS)
+    if idx == 2:
+        r, g, b = compute_aurora_rgb(spin_timer, 0.0)
+        return rl.Color(r, g, b, alpha)
+    r, g, b = BLOCK_SKINS[idx]["accent_col"]
+    return rl.Color(r, g, b, alpha)

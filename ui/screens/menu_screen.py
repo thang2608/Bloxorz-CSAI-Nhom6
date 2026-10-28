@@ -1,8 +1,8 @@
 # ui/screens/menu_screen.py
 """
 Bloxorz 3D - Giao diện Màn hình Menu chính (DELUXE SPLIT-LAYOUT EDITION)
-Bố cục chia đôi: Trái = Thương hiệu & Nút điều hướng | Phải = Khối 3D xoay trưng bày.
-Hỗ trợ điều hướng song song Bàn phím (↑/↓/W/S + Enter/Space) & Chuột.
+Bố cục chia đôi: Trái = Thương hiệu & Nút điều hướng | Phải = Khối 3D xoay trưng bày & Bộ chọn 6 Skin 3D.
+Hỗ trợ điều hướng song song Bàn phím (↑/↓/W/S + Enter/Space + Phím B đổi Skin) & Chuột.
 """
 
 import sys
@@ -14,7 +14,8 @@ except ImportError:
 
 from config import (
     STATE_PLAYING, STATE_LEVEL_SELECT, STATE_TUTORIAL_STAGE1,
-    BLOCK_COLOR, BLOCK_WIRE, LEVEL_NAMES_VI
+    BLOCK_COLOR, BLOCK_WIRE, LEVEL_NAMES_VI,
+    BLOCK_SKINS, get_skin_accent_color
 )
 from app_state import ctx
 from ui.font_manager import draw_text_ui, measure_text_ui
@@ -118,7 +119,7 @@ def draw_menu_3d_showcase(dt):
     rl.rl_rotatef(tilt_x, 1.0, 0.0, 0.0)
     rl.rl_rotatef(tilt_z, 0.0, 0.0, 1.0)
 
-    # Khối cỡ lớn ấn tượng, tỷ lệ 1x2x1
+    # Khối cỡ lớn ấn tượng, tỷ lệ 1x2x1 với cấu trúc 3D của Skin đang chọn
     draw_deluxe_block(
         rl.Vector3(0.0, 0.0, 0.0),
         rl.Vector3(1.5, 3.0, 1.5),
@@ -129,7 +130,7 @@ def draw_menu_3d_showcase(dt):
     # ── Bệ đỡ Năng lượng Sci-Fi (Hologram Pedestal) ──
     pedestal_y = -2.2
 
-    # Vòng tròn năng lượng đồng tâm xoay ngược chiều nhau
+    # Vòng tròn năng lượng đồng tâm xoay ngược chiều nhau (đồng điệu màu Skin)
     for ring_i in range(3):
         ring_radius = 1.2 + ring_i * 0.6
         ring_alpha = int(180 - ring_i * 50)
@@ -140,14 +141,19 @@ def draw_menu_3d_showcase(dt):
         rl.rl_translatef(0.0, ring_bob, 0.0)
         rl.rl_rotatef(t * ring_speed, 0.0, 1.0, 0.0)
         ring_pos = rl.Vector3(0.0, 0.0, 0.0)
-        ring_col = rl.Color(0, 240, 245, ring_alpha) if ring_i % 2 == 0 else rl.Color(255, 215, 80, ring_alpha)
+        if ring_i % 2 == 0:
+            ring_col = get_skin_accent_color(ctx.current_skin_idx, t, alpha=ring_alpha)
+        else:
+            ring_col = rl.Color(0, 240, 245, ring_alpha)
         rl.draw_cylinder_wires(ring_pos, ring_radius, ring_radius, 0.04, 24, ring_col)
         rl.rl_pop_matrix()
 
     # Cột sáng lượng tử mờ bên dưới
     beam_pos = rl.Vector3(0.0, pedestal_y - 0.8, 0.0)
-    rl.draw_cube(beam_pos, 0.18, 1.6, 0.18, rl.Color(0, 235, 245, 30))
-    rl.draw_cube_wires(beam_pos, 0.20, 1.6, 0.20, rl.Color(0, 240, 245, 80))
+    beam_accent = get_skin_accent_color(ctx.current_skin_idx, t, alpha=35)
+    beam_wire = get_skin_accent_color(ctx.current_skin_idx, t, alpha=95)
+    rl.draw_cube(beam_pos, 0.18, 1.6, 0.18, beam_accent)
+    rl.draw_cube_wires(beam_pos, 0.20, 1.6, 0.20, beam_wire)
 
     # Cụm 3x3 ô gạch đá phiến bệ đỡ nổi
     for dr in range(-1, 2):
@@ -160,7 +166,7 @@ def draw_menu_3d_showcase(dt):
                 # Ô trung tâm phát sáng (ô đích)
                 glow_a = int(185 + 70 * math.sin(t * 5.0))
                 rl.draw_cube(tile_pos, 0.92, 0.12, 0.92, rl.Color(2, 5, 8, 255))
-                rl.draw_cube_wires(tile_pos, 0.92, 0.12, 0.92, rl.Color(0, 245, 255, glow_a))
+                rl.draw_cube_wires(tile_pos, 0.92, 0.12, 0.92, get_skin_accent_color(ctx.current_skin_idx, t, alpha=glow_a))
             else:
                 top_col = rl.Color(76, 100, 116, 200) if (dr + dc) % 2 == 0 else rl.Color(58, 78, 92, 200)
                 rl.draw_cube(tile_pos, 0.88, 0.10, 0.88, top_col)
@@ -176,12 +182,15 @@ def draw_menu_3d_showcase(dt):
         sat_z = math.sin(sat_rad) * sat_dist
         sat_sparkle = 0.5 + 0.5 * math.sin(t * 4.0 + sat_i * 2.0)
         sat_alpha = int(140 + 115 * sat_sparkle)
-        sat_col = rl.Color(0, 245, 255, sat_alpha) if sat_i % 2 == 0 else rl.Color(255, 220, 90, sat_alpha)
+        if sat_i % 2 == 0:
+            sat_col = get_skin_accent_color(ctx.current_skin_idx, t + sat_i * 0.5, alpha=sat_alpha)
+        else:
+            sat_col = rl.Color(0, 245, 255, sat_alpha)
         rl.draw_cube(rl.Vector3(sat_x, sat_y_pos, sat_z), 0.1, 0.1, 0.1, sat_col)
 
 
 def draw_menu_screen(w, h):
-    """Màn hình Menu chính Deluxe Split-Layout với điều hướng Bàn phím + Chuột."""
+    """Màn hình Menu chính Deluxe Split-Layout với điều hướng Bàn phím + Chuột & Bộ chọn 6 Skin 3D."""
     global menu_selected_idx
 
     # ── Xử lý điều hướng bàn phím ──
@@ -198,19 +207,6 @@ def draw_menu_screen(w, h):
         rl.Color(5, 10, 18, 240),
         rl.Color(5, 10, 18, 0)
     )
-
-    # Đường viền dọc trang trí Sci-Fi mảnh màu Cyan
-    #line_x = int(w * 0.50)
-    #for seg_y in range(0, h, 4):
-      #  seg_alpha = int(40 + 25 * math.sin(ctx.spin_timer * 2.0 + seg_y * 0.02))
-       # rl.draw_rectangle(line_x, seg_y, 1, 2, rl.Color(0, 240, 245, seg_alpha))
-
-    # Khung Panel kính mờ Glassmorphism bên trái
-    # glass_margin = 28
-    # glass_rec = rl.Rectangle(glass_margin, glass_margin, int(w * 0.46) - glass_margin, h - glass_margin * 2)
-    # rl.draw_rectangle_rounded(glass_rec, 0.03, 8, rl.Color(10, 18, 28, 120))
-    # rl.draw_rectangle_rounded_lines(glass_rec, 0.03, 8, rl.Color(0, 200, 210, 40))
-
 
     # ── [NÚT BẬT/TẮT NHẠC NỀN TRÊN MENU] ──
     btn_sound_menu = rl.Rectangle(w - 175, 24, 145, 38)
@@ -323,7 +319,7 @@ def draw_menu_screen(w, h):
     # ══════════════════════════════════════════════════════════════════
     # THANH CHỈ DẪN ĐIỀU KHIỂN Ở GÓC DƯỚI BÊN TRÁI
     # ══════════════════════════════════════════════════════════════════
-    hint = "[↑/↓] hoặc [W/S]: Di chuyển  ·  [Enter]: Chọn  ·  [M]: Nhạc nền  ·  [Chuột]: Tương tác"
+    hint = "[↑/↓] hoặc [W/S]: Di chuyển  ·  [Enter]: Chọn  ·  [B]: Đổi Skin  ·  [M]: Nhạc nền"
     w_hint = measure_text_ui(hint, 12)
     hint_x = left_margin - 6
     hint_y = h - 55
@@ -333,11 +329,48 @@ def draw_menu_screen(w, h):
     draw_text_ui(hint, hint_x, hint_y, 12, rl.Color(150, 185, 200, 200))
 
     # ══════════════════════════════════════════════════════════════════
-    # B. NỬA BÊN PHẢI — Nhãn trang trí 2D phụ trợ (Overlay nhẹ)
+    # B. NỬA BÊN PHẢI — Thanh Chọn Skin 3D & Nhãn Trạng Thái
     # ══════════════════════════════════════════════════════════════════
-    right_center_x = int(w * 0.75)
+    right_center_x = int(w * 0.74)
 
-    # Dòng trạng thái nhỏ tinh tế phía dưới khối 3D
+    # ── Thanh chọn Skin 3D tương tác: [<] [ SKIN: <Tên Skin> (B) ] [>] ──
+    cur_skin = ctx.get_current_skin()
+    skin_accent = get_skin_accent_color(ctx.current_skin_idx, ctx.spin_timer)
+    skin_y = h - 148
+    main_skin_w = 310
+    arrow_w = 38
+    skin_h = 40
+    total_skin_w = arrow_w * 2 + main_skin_w + 16
+    skin_start_x = right_center_x - total_skin_w // 2
+
+    btn_prev_skin = rl.Rectangle(skin_start_x, skin_y, arrow_w, skin_h)
+    btn_main_skin = rl.Rectangle(skin_start_x + arrow_w + 8, skin_y, main_skin_w, skin_h)
+    btn_next_skin = rl.Rectangle(skin_start_x + arrow_w + 8 + main_skin_w + 8, skin_y, arrow_w, skin_h)
+
+    h_ps, c_ps = check_button(btn_prev_skin)
+    h_ms, c_ms = check_button(btn_main_skin)
+    h_ns, c_ns = check_button(btn_next_skin)
+
+    if h_ps:
+        notify_hover("menu_skin_prev")
+    elif h_ms:
+        notify_hover("menu_skin_main")
+    elif h_ns:
+        notify_hover("menu_skin_next")
+
+    skin_label = f"SKIN ({ctx.current_skin_idx + 1}/{len(BLOCK_SKINS)}): {cur_skin['name']} (B)"
+    draw_styled_button(btn_prev_skin, "<", 16, h_ps, accent_col=skin_accent)
+    draw_styled_button(btn_main_skin, skin_label, 13, h_ms, active=True, accent_col=skin_accent)
+    draw_styled_button(btn_next_skin, ">", 16, h_ns, accent_col=skin_accent)
+
+    if c_ps:
+        ctx.cycle_skin(-1)
+        play_sfx("ui_select")
+    elif c_ms or c_ns:
+        ctx.cycle_skin(1)
+        play_sfx("ui_select")
+
+    # Dòng trạng thái nhỏ tinh tế phía dưới thanh chọn Skin
     level_idx = ctx.game.level_index
     level_name = LEVEL_NAMES_VI[level_idx] if level_idx < len(LEVEL_NAMES_VI) else f"Màn {level_idx + 1}"
     status_text = f"ĐANG CHỜ LỆNH  ·  MÀN HIỆN TẠI: MÀN {level_idx + 1:02d}"
