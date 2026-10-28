@@ -50,7 +50,7 @@ class AppContext:
         self.ai_move_queue = []
         self.ai_stats = None
         self.show_solvers_dropdown = False
-        self.solver_names = ["A*", "BFS", "DFS", "UCS", "IDS"]
+        self.solver_names = ["A*", "BFS", "DFS", "UCS"]
 
         # 6. Hệ thống 6 Skin Khối 3D Cao Cấp
         self.current_skin_idx = 0

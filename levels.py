@@ -116,31 +116,52 @@ LEVELS = [
     # ─────────────────────────────────────────────
     {
         "id": 5,
-        "name": "Màn 5: Khóa Chữ X Nặng",
-        "description": "Công tắc X chỉ nhận khi ĐỨNG THẲNG. Phải tìm vòng xoay quanh hố sâu để đổi đúng thế đứng!",
+        "name": "Màn 14: Mê Cung Lượng Tử",
+        "description": "Thử thách cực khó: Kết hợp dải sàn cam hiểm trở và hệ thống cầu đảo chiều nghịch đảo.",
         "board": [
-            # 0  1  2  3  4  5  6  7  8  9 10 11
-            [1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1],  # 0: start (0, 0), X ở (0, 4)
-            [1, 1, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1],  # 1: lỗ rỗng (1, 2..3) tạo vòng xoay
-            [1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 2, 1],  # 2: Cầu nối (2, 5..8), Đích (2, 10)
-            [0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1],  # 3
-            [0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 0],  # 4
+            # 0  1  2  3  4  5  6  7  8  9 10 11 12 13 14
+            [1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0],  # Row 0: Start ở (0, 1)
+            [1, 3, 1, 0, 0, 0, 0, 1, 3, 3, 1, 0, 0, 0, 0],  # Row 1: Sàn cam tại (1, 1) và (1, 8..9)
+            [1, 3, 1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 0],  # Row 2
+            [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],  # Row 3
+            [0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 0],  # Row 4
+            [0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 2],  # Row 5: Đích ở (5, 14)
         ],
-        "start": (0, 0),
+        "start": (0, 1),
         "switches": [
             {
-                "id": "sw_heavy_5",
-                "type": "heavy",
-                "pos": [0, 4],
-                "effects": [{"action": "toggle", "bridge_id": 0}],
+                "id": "sw_quantum_1",
+                "type": "soft",
+                "pos": [2, 6], # Công tắc mềm giữa đường
+                "effects": [
+                    {"action": "open", "bridge_id": 0},
+                    {"action": "close", "bridge_id": 1}
+                ]
             },
+            {
+                "id": "sw_quantum_heavy",
+                "type": "heavy",
+                "pos": [4, 7], # Công tắc X nặng đòi hỏi đứng thẳng
+                "effects": [
+                    {"action": "open", "bridge_id": 1},
+                    {"action": "open", "bridge_id": 2}
+                ]
+            }
         ],
         "bridges": {
             0: {
-                "tiles": [[2, 5], [2, 6], [2, 7], [2, 8]],
-                "initially_open": False,
+                "tiles": [[3, 0], [3, 1], [3, 2], [3, 3]],
+                "initially_open": False
             },
-        },
+            1: {
+                "tiles": [[3, 5], [3, 6], [3, 7]],
+                "initially_open": True
+            },
+            2: {
+                "tiles": [[4, 8], [4, 9], [4, 10], [4, 11], [4, 12]],
+                "initially_open": False
+            }
+        }
     },
 
     # ─────────────────────────────────────────────
@@ -148,45 +169,41 @@ LEVELS = [
     # ─────────────────────────────────────────────
     {
         "id": 6,
-        "name": "Màn 6: Phân Thân & Cầu Kép",
-        "description": "Đứng lên () tách thành 2 khối nhỏ. Phối hợp bật cả 2 nhịp cầu rồi hội ngộ hợp nhất!",
+        "name": "Màn 6: Cực Hạn Luân Hồi & Vực Thẳm",
+        "description": "Thử thách đỉnh cao 35 bước: Vượt đầm lầy cam, xoay quanh lỗ rỗng bấm khóa X nặng, mở cầu kép đảo chiều để về đích!",
         "board": [
-            # 0  1  2  3  4  5  6  7  8  9 10 11 12
-            [1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1],  # 0: switch L ở (0, 8), switch R ở (0, 12)
-            [1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1],  # 1: Cầu 0 (1, 4..5), Cầu 1 (1, 6..7)
-            [1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1],  # 2: split ở (2, 1)
-            [0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 2, 1],  # 3: Đích ở (3, 11)
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1],  # 4
+            # 0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17
+            [1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0],  # 0: Khóa X nặng ở (0, 11)
+            [1, 1, 1, 1, 3, 3, 3, 3, 1, 0, 0, 1, 0, 0, 1, 1, 1, 1],  # 1: Start (1, 1), Cầu 1 (1, 12..13)
+            [1, 1, 1, 1, 3, 3, 3, 3, 1, 1, 1, 1, 0, 0, 1, 2, 1, 1],  # 2: Sàn cam (cols 4..7), Đích ở (2, 15)
+            [0, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1],  # 3: Lỗ rỗng giữa đảo 2 (1, 9..10)
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],  # 4: Cầu 0 nối xuống đảo dưới (4, 11)
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],  # 5: Cầu 0 (5, 11)
+            [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0],  # 6: Công tắc tròn mở cầu đích ở (6, 8)
+            [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0],  # 7: Đảo đáy 2x6
         ],
-        "start": (0, 1),
+        "start": (1, 1),
         "switches": [
             {
-                "id": "sw_split_6",
-                "type": "split",
-                "pos": [2, 1],
-                "split_to": [[0, 2], [4, 11]],
-                "effects": [],
-            },
-            {
-                "id": "sw_soft_6_left",
-                "type": "soft",
-                "pos": [0, 8],
+                "id": "sw_heavy_x",
+                "type": "heavy",
+                "pos": [0, 11],
                 "effects": [{"action": "open", "bridge_id": 0}],
             },
             {
-                "id": "sw_soft_6_right",
+                "id": "sw_soft_round",
                 "type": "soft",
-                "pos": [0, 12],
+                "pos": [6, 8],
                 "effects": [{"action": "open", "bridge_id": 1}],
             },
         ],
         "bridges": {
             0: {
-                "tiles": [[1, 4], [1, 5]],
+                "tiles": [[4, 11], [5, 11]],
                 "initially_open": False,
             },
             1: {
-                "tiles": [[1, 6], [1, 7]],
+                "tiles": [[1, 12], [1, 13]],
                 "initially_open": False,
             },
         },
@@ -197,45 +214,46 @@ LEVELS = [
     # ─────────────────────────────────────────────
     {
         "id": 7,
-        "name": "Màn 7: Cầu Kép Đảo Chiều",
-        "description": "Hai nhịp cầu nghịch đảo nhau: Mở cầu này sẽ đóng cầu kia! Phải tính toán kỹ đường đi và về.",
+        "name": "Màn 7: Ba Cây Cầu",
+        "description": "Bật công tắc để mở cầu, đứng thẳng lên công tắc X để mở cầu tiếp theo. Cẩn thận các ô cam dễ vỡ!",
         "board": [
-            # 0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15
-            [1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1],  # 0: switch A ở (0, 3), heavy B ở (0, 8)
-            [1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1],  # 1: Cầu 0 (1, 4..5), Cầu 1 (1, 10..12)
-            [1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 0, 1, 2, 1],  # 2: Đích ở (2, 14)
-            [0, 1, 1, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1],  # 3
+            # 0  1  2  3  4  5  6  7  8  9 10 11 12 13 14
+            [1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0],  # 0
+            [1, 1, 3, 1, 0, 0, 1, 3, 1, 1, 0, 0, 0, 0, 0],  # 1: Start (1,1) | Cầu 0 (1,4..5)
+            [1, 1, 1, 1, 0, 0, 1, 3, 1, 3, 0, 0, 0, 0, 0],  # 2: Switch (2,2) | X (2,8)
+            [0, 0, 0, 0, 0, 0, 1, 3, 1, 1, 0, 0, 0, 0, 0],  # 3: Cầu 1 (4..5, 7) đi xuống từ (3,7)
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],  # 4: Cầu 1 (4,7)
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],  # 5: Cầu 1 (5,7)
+            [0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1],  # 6
+            [0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 3, 1],  # 7: Switch (7,6) | Cầu 2 (7,10..11)
+            [0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 2, 1],  # 8: ĐÍCH (8,13)
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1],  # 9
         ],
-        "start": (0, 0),
+        "start": (1, 1),
         "switches": [
             {
-                "id": "sw_soft_7_A",
+                "id": "sw_14_a",
                 "type": "soft",
-                "pos": [0, 3],
-                "effects": [
-                    {"action": "open", "bridge_id": 0},
-                    {"action": "close", "bridge_id": 1},
-                ],
+                "pos": [2, 2],
+                "effects": [{"action": "open", "bridge_id": 0}],
             },
             {
-                "id": "sw_heavy_7_B",
+                "id": "sw_14_b",
                 "type": "heavy",
-                "pos": [0, 8],
-                "effects": [
-                    {"action": "close", "bridge_id": 0},
-                    {"action": "open", "bridge_id": 1},
-                ],
+                "pos": [2, 8],
+                "effects": [{"action": "open", "bridge_id": 1}],
+            },
+            {
+                "id": "sw_14_c",
+                "type": "soft",
+                "pos": [7, 6],
+                "effects": [{"action": "open", "bridge_id": 2}],
             },
         ],
         "bridges": {
-            0: {
-                "tiles": [[1, 4], [1, 5]],
-                "initially_open": False,
-            },
-            1: {
-                "tiles": [[1, 10], [1, 11], [1, 12]],
-                "initially_open": False,
-            },
+            0: {"tiles": [[1, 4], [1, 5]], "initially_open": False},
+            1: {"tiles": [[4, 7], [5, 7]], "initially_open": False},
+            2: {"tiles": [[7, 10], [7, 11]], "initially_open": False},
         },
     },
 
@@ -244,33 +262,21 @@ LEVELS = [
     # ─────────────────────────────────────────────
     {
         "id": 8,
-        "name": "Màn 8: Mê Cung Sàn Cam & Khóa X",
-        "description": "Sàn cam dễ vỡ giăng đầy quanh công tắc X nặng. Phải tính toán từng bước lăn để đứng lên X an toàn!",
+        "name": "Màn 8: Mê Cung Sàn Cam Vô Tận",
+        "description": "Cả bản đồ rải đầy sàn cam dễ vỡ. Chỉ được đứng thẳng trên ô xám thường, hãy tìm nhịp lăn chính xác để tới lỗ đích!",
         "board": [
-            # 0  1  2  3  4  5  6  7  8  9 10
-            [1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1],  # 0: X ở (0, 9)
-            [1, 1, 1, 3, 3, 1, 3, 3, 1, 1, 1],  # 1: ô đệm (1, 5)
-            [1, 1, 1, 3, 3, 1, 3, 3, 1, 1, 1],  # 2: ô đệm (2, 5)
-            [0, 1, 1, 0, 0, 0, 0, 0, 1, 1, 0],  # 3
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],  # 4: Cầu ở (4, 1..2)
-            [0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0],  # 5
-            [0, 1, 2, 1, 0, 0, 0, 0, 0, 0, 0],  # 6: Đích ở (6, 2)
-            [0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0],  # 7
+            [0, 1, 1, 1, 3, 1, 3, 1, 3, 1, 0, 0, 1],
+            [1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1],
+            [3, 1, 1, 0, 1, 3, 2, 1, 0, 3, 1, 1, 1],
+            [3, 1, 0, 3, 1, 0, 3, 1, 1, 1, 0, 3, 1],
+            [3, 1, 1, 1, 3, 1, 1, 0, 3, 1, 1, 1, 3],
+            [1, 1, 1, 0, 1, 3, 3, 3, 0, 1, 3, 0, 0],
+            [0, 1, 1, 1, 3, 0, 1, 1, 3, 1, 1, 1, 0],
         ],
-        "start": (0, 1),
+        "start": (6, 2),
         "switches": [
-            {
-                "id": "sw_8_heavy",
-                "type": "heavy",
-                "pos": [0, 9],
-                "effects": [{"action": "open", "bridge_id": 0}],
-            },
         ],
         "bridges": {
-            0: {
-                "tiles": [[4, 1], [4, 2]],
-                "initially_open": False,
-            },
         },
     },
 
@@ -279,39 +285,25 @@ LEVELS = [
     # ─────────────────────────────────────────────
     {
         "id": 9,
-        "name": "Màn 9: Quần Đảo Nổi & Ba Nhịp Cầu",
-        "description": "Các hòn đảo nhỏ tí hon giữa đại dương hư vô. Chỉ một sơ suất nhỏ là rơi xuống đáy vực!",
+        "name": "Màn 9: Hai Công Tắc Hai Nhịp Cầu",
+        "description": "Hai công tắc tròn ở hai đầu bản đồ, mỗi cái mở một nhịp cầu. Phải đi vòng, bật đúng thứ tự rồi quay lại băng qua cầu.",
         "board": [
-            # 0  1  2  3  4  5  6  7  8  9 10 11 12 13 14
-            [1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1],  # 0: switch 1 ở (0, 1), heavy 2 ở (3, 7)
-            [1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 2, 1],  # 1: Cầu 0 (1, 3..5), Cầu 1 (1, 9..11), Đích (1, 13)
-            [1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1],  # 2
-            [0, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1],  # 3
+            [0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 1, 1],
+            [1, 1, 0, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1],
+            [1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1],
+            [1, 1, 1, 0, 1, 0, 0, 1, 1, 1, 1, 1, 0],
+            [1, 0, 1, 0, 0, 0, 1, 1, 1, 1, 0, 1, 1],
+            [0, 0, 2, 0, 1, 1, 1, 0, 0, 1, 1, 1, 1],
+            [0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 0],
         ],
-        "start": (0, 0),
+        "start": (4, 8),
         "switches": [
-            {
-                "id": "sw_9_1",
-                "type": "soft",
-                "pos": [0, 1],
-                "effects": [{"action": "open", "bridge_id": 0}],
-            },
-            {
-                "id": "sw_9_2",
-                "type": "heavy",
-                "pos": [3, 7],
-                "effects": [{"action": "open", "bridge_id": 1}],
-            },
+            {"id": "sw_14_s0", "type": "soft", "pos": [5, 4], "effects": [{"action": "open", "bridge_id": 0}]},
+            {"id": "sw_14_s1", "type": "soft", "pos": [1, 1], "effects": [{"action": "open", "bridge_id": 1}]},
         ],
         "bridges": {
-            0: {
-                "tiles": [[1, 3], [1, 4], [1, 5]],
-                "initially_open": False,
-            },
-            1: {
-                "tiles": [[1, 9], [1, 10], [1, 11]],
-                "initially_open": False,
-            },
+            0: {"tiles": [[0, 4], [0, 5], [0, 6]], "initially_open": False},
+            1: {"tiles": [[4, 3], [4, 4], [4, 5]], "initially_open": False},
         },
     },
 
@@ -320,47 +312,26 @@ LEVELS = [
     # ─────────────────────────────────────────────
     {
         "id": 10,
-        "name": "Màn 10: Phân Thân & Đầm Lầy Cam",
-        "description": "Khối nhỏ 1x1x1 có thể đi an toàn trên sàn cam! Hãy tận dụng để vượt bẫy mở cầu hội ngộ.",
+        "name": "Màn 10: Khóa X Nặng & Đầm Lầy Cam",
+        "description": "Công tắc tròn mở cầu thứ nhất, khóa X nặng (phải đứng thẳng) mở cầu thứ hai, giữa đường là sàn cam dễ vỡ.",
         "board": [
-            # 0  1  2  3  4  5  6  7  8  9 10 11 12
-            [1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1],  # 0
-            [1, 1, 1, 1, 0, 0, 0, 0, 3, 3, 3, 1, 1],  # 1: Cầu 0 (1, 4..5), Cầu 1 (1, 6..7), sàn cam (1, 8..10)
-            [1, 1, 1, 1, 0, 0, 0, 0, 3, 3, 3, 1, 1],  # 2: split ở (2, 1), sàn cam (2, 8..10)
-            [0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],  # 3
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2],  # 4: Đích ở (4, 12)
+            [1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 3, 1, 0],
+            [1, 0, 1, 3, 1, 0, 1, 1, 0, 0, 1, 1, 1],
+            [1, 3, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0],
+            [1, 1, 1, 1, 1, 3, 0, 3, 0, 0, 1, 0, 0],
+            [1, 1, 1, 1, 1, 1, 0, 2, 0, 1, 1, 1, 0],
+            [1, 3, 1, 0, 1, 0, 0, 1, 1, 1, 0, 0, 0],
+            [1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 0, 0],
+            [1, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0],
         ],
-        "start": (0, 1),
+        "start": (3, 10),
         "switches": [
-            {
-                "id": "sw_10_split",
-                "type": "split",
-                "pos": [2, 1],
-                "split_to": [[0, 3], [0, 8]],
-                "effects": [],
-            },
-            {
-                "id": "sw_10_soft_left",
-                "type": "soft",
-                "pos": [2, 3],
-                "effects": [{"action": "open", "bridge_id": 0}],
-            },
-            {
-                "id": "sw_10_soft_right",
-                "type": "soft",
-                "pos": [3, 11],
-                "effects": [{"action": "open", "bridge_id": 1}],
-            },
+            {"id": "sw_15_s0", "type": "soft", "pos": [4, 9], "effects": [{"action": "open", "bridge_id": 0}]},
+            {"id": "sw_15_s1", "type": "heavy", "pos": [7, 1], "effects": [{"action": "open", "bridge_id": 1}]},
         ],
         "bridges": {
-            0: {
-                "tiles": [[1, 4], [1, 5]],
-                "initially_open": False,
-            },
-            1: {
-                "tiles": [[1, 6], [1, 7]],
-                "initially_open": False,
-            },
+            0: {"tiles": [[2, 12], [3, 12], [4, 12]], "initially_open": False},
+            1: {"tiles": [[3, 8], [3, 9]], "initially_open": False},
         },
     },
 
@@ -369,49 +340,28 @@ LEVELS = [
     # ─────────────────────────────────────────────
     {
         "id": 11,
-        "name": "Màn 11: Ba Cầu Liên Hoàn",
-        "description": "Ba nhịp cầu phụ thuộc lẫn nhau bắc qua vực sâu vô tận. Thử thách giải đố logic đỉnh cao!",
+        "name": "Màn 11: Cầu Đảo Chiều Địa Ngục",
+        "description": "Ba nhịp cầu, công tắc tròn vừa mở vừa đóng cầu khác, khóa X nặng và sàn cam. Sai một nhịp là phải làm lại!",
         "board": [
-            # 0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16
-            [1, 1, 1, 0, 0, 1, 1, 1, 0, 0, 1, 1, 1, 0, 0, 1, 1, 1],  # 0
-            [1, 1, 1, 0, 0, 1, 1, 1, 0, 0, 1, 1, 1, 0, 0, 1, 1, 1],  # 1: Cầu 0 (1, 3-4), Cầu 1 (1, 8-9), Cầu 2 (1, 13-14)
-            [1, 1, 1, 0, 0, 1, 1, 1, 0, 0, 1, 1, 1, 0, 0, 1, 2, 1],  # 2: Đích ở (2, 16)
-            [0, 1, 1, 0, 0, 1, 1, 1, 0, 0, 1, 1, 1, 0, 0, 1, 1, 1],  # 3
+            [3, 1, 1, 1, 1, 3, 0, 1, 3, 1, 1, 1, 1, 1],
+            [1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 0, 1, 1, 0],
+            [0, 0, 0, 2, 0, 1, 0, 1, 0, 3, 1, 0, 0, 0],
+            [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 1],
+            [1, 3, 1, 3, 3, 1, 0, 1, 1, 1, 0, 1, 0, 1],
+            [3, 1, 3, 0, 1, 1, 1, 1, 0, 0, 1, 1, 3, 1],
+            [0, 1, 0, 0, 0, 1, 1, 0, 1, 1, 3, 1, 0, 0],
+            [0, 3, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 3],
         ],
-        "start": (0, 0),
+        "start": (7, 11),
         "switches": [
-            {
-                "id": "sw_11_1",
-                "type": "soft",
-                "pos": [0, 2],
-                "effects": [{"action": "open", "bridge_id": 0}],
-            },
-            {
-                "id": "sw_11_2",
-                "type": "heavy",
-                "pos": [3, 6],
-                "effects": [{"action": "open", "bridge_id": 1}],
-            },
-            {
-                "id": "sw_11_3",
-                "type": "heavy",
-                "pos": [3, 11],
-                "effects": [{"action": "open", "bridge_id": 2}],
-            },
+            {"id": "sw_16_s0", "type": "soft", "pos": [5, 13], "effects": [{"action": "open", "bridge_id": 0}, {"action": "close", "bridge_id": 1}]},
+            {"id": "sw_16_s1", "type": "heavy", "pos": [6, 1], "effects": [{"action": "open", "bridge_id": 2}]},
+            {"id": "sw_16_s2", "type": "soft", "pos": [0, 2], "effects": [{"action": "open", "bridge_id": 1}]},
         ],
         "bridges": {
-            0: {
-                "tiles": [[1, 3], [1, 4]],
-                "initially_open": False,
-            },
-            1: {
-                "tiles": [[1, 8], [1, 9]],
-                "initially_open": False,
-            },
-            2: {
-                "tiles": [[1, 13], [1, 14]],
-                "initially_open": False,
-            },
+            0: {"tiles": [[1, 9], [1, 10]], "initially_open": False},
+            1: {"tiles": [[2, 11], [2, 12], [2, 13]], "initially_open": True},
+            2: {"tiles": [[1, 5], [1, 6], [1, 7]], "initially_open": False},
         },
     },
 
@@ -420,61 +370,74 @@ LEVELS = [
     # ─────────────────────────────────────────────
     {
         "id": 12,
-        "name": "Màn 12: Đỉnh Cao Đại Bậc Thầy",
-        "description": "Thử thách tối thượng kết hợp mọi cơ chế: Phân thân, Sàn cam dễ vỡ, Công tắc X và Cầu bí mật!",
-        "board": [
-            # 0  1  2  3  4  5  6  7  8  9 10 11 12 13
-            [1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0],  # 0
-            [1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0],  # 1: Cầu 0 (1, 4-5), Cầu 1 (1, 6-7)
-            [1, 1, 1, 1, 0, 0, 0, 0, 1, 3, 3, 1, 0, 0],  # 2: Ô cam ở (2, 9), (2, 10)
-            [0, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0],  # 3: X ở (3, 8)
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],  # 4: Cầu 2 ở (4, 10), (5, 10)
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],  # 5
-            [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0],  # 6
-            [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 2, 1, 0, 0],  # 7: Đích ở (7, 10)
-            [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0],  # 8
-        ],
-        "start": (0, 0),
-        "switches": [
-            {
-                "id": "sw_12_split",
-                "type": "split",
-                "pos": [2, 1],
-                "split_to": [[0, 3], [0, 8]],
-                "effects": [],
-            },
-            {
-                "id": "sw_12_soft_1",
-                "type": "soft",
-                "pos": [0, 1],
-                "effects": [{"action": "open", "bridge_id": 0}],
-            },
-            {
-                "id": "sw_12_soft_2",
-                "type": "soft",
-                "pos": [0, 11],
-                "effects": [{"action": "open", "bridge_id": 1}],
-            },
-            {
-                "id": "sw_12_heavy",
-                "type": "heavy",
-                "pos": [3, 8],
-                "effects": [{"action": "open", "bridge_id": 2}],
-            },
-        ],
-        "bridges": {
-            0: {
-                "tiles": [[1, 4], [1, 5]],
-                "initially_open": False,
-            },
-            1: {
-                "tiles": [[1, 6], [1, 7]],
-                "initially_open": False,
-            },
-            2: {
-                "tiles": [[4, 10], [5, 10]],
-                "initially_open": False,
-            },
-        },
+        "name": "Màn 12: Mê Cung Địa Ngục",
+                "description": "5 nhịp cầu đóng/mở đảo chiều, công tắc X nặng và sàn cam dễ vỡ. Mỗi nước đi đều có thể là nước đi cuối cùng!",
+                "board": [
+                    # 0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15
+                    [1, 1, 1, 1, 0, 0, 0, 0, 1, 3, 1, 1, 3, 1, 0, 0],  # 0
+                    [1, 1, 1, 3, 3, 0, 0, 1, 3, 1, 1, 1, 1, 1, 0, 0],  # 1: Start (1,1) | Switch (1,2) | Cầu 0 (1,5..6) | X (1,9)
+                    [1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 0, 0],  # 2: Cầu 1 (2,11)
+                    [0, 1, 0, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0],  # 3: Cầu 1 (3,11)
+                    [0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0],  # 4
+                    [0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 3, 1, 1, 1, 0],  # 5: Switch (5,12)
+                    [0, 0, 1, 1, 3, 0, 0, 1, 1, 1, 1, 1, 0, 1, 1, 0],  # 6: Cầu 2 (6,12)
+                    [0, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 0, 0, 1, 0],  # 7: Cầu 2 (7,12)
+                    [0, 0, 1, 0, 1, 0, 0, 1, 1, 1, 1, 3, 0, 1, 1, 0],  # 8: X (8,8) | Cầu 3 (8,5..6)
+                    [0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 3, 1, 1],  # 9: Cầu 4 (9,2)
+                    [2, 1, 0, 1, 1, 3, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],  # 10: ĐÍCH (10,0) | Switch (10,3) | Cầu 4 (10,2)
+                    [0, 0, 0, 1, 1, 3, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],  # 11
+                ],
+                "start": (1, 1),
+                "switches": [
+                    {
+                        "id": "sw_13_a",
+                        "type": "soft",
+                        "pos": [1, 2],
+                        "effects": [{"action": "open", "bridge_id": 0}],
+                    },
+                    {
+                        "id": "sw_13_b",
+                        "type": "heavy",
+                        "pos": [1, 9],
+                        "effects": [
+                            {"action": "open", "bridge_id": 1},
+                            {"action": "close", "bridge_id": 0},
+                        ],
+                    },
+                    {
+                        "id": "sw_13_c",
+                        "type": "soft",
+                        "pos": [5, 12],
+                        "effects": [
+                            {"action": "open", "bridge_id": 2},
+                            {"action": "close", "bridge_id": 1},
+                        ],
+                    },
+                    {
+                        "id": "sw_13_d",
+                        "type": "heavy",
+                        "pos": [8, 8],
+                        "effects": [
+                            {"action": "open", "bridge_id": 0},
+                            {"action": "open", "bridge_id": 3},
+                        ],
+                    },
+                    {
+                        "id": "sw_13_e",
+                        "type": "soft",
+                        "pos": [10, 3],
+                        "effects": [
+                            {"action": "close", "bridge_id": 2},
+                            {"action": "open", "bridge_id": 4},
+                        ],
+                    },
+                ],
+                "bridges": {
+                    0: {"tiles": [[1, 5], [1, 6]], "initially_open": False},
+                    1: {"tiles": [[2, 11], [3, 11]], "initially_open": False},
+                    2: {"tiles": [[6, 12], [7, 12]], "initially_open": False},
+                    3: {"tiles": [[8, 5], [8, 6]], "initially_open": False},
+                    4: {"tiles": [[9, 2], [10, 2]], "initially_open": False},
+                },
     },
 ]
