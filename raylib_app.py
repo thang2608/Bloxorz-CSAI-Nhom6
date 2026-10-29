@@ -3,6 +3,7 @@
 BLOXORZ 3D - AI SOLVER EDITION
 Điểm khởi chạy ứng dụng (Main Entry Point).
 Kiến trúc mô-đun hóa cao cấp, tinh gọn, đảm bảo hiệu năng 60 FPS mượt mà.
+Hỗ trợ thay đổi kích thước cửa sổ linh hoạt, Phóng to/Thu nhỏ (Maximize/Resize) và Toàn màn hình (F11).
 """
 
 import math
@@ -43,8 +44,12 @@ current_skin_idx = 0
 def main():
     global current_skin_idx
 
-    # ── 1. Khởi tạo Cửa sổ & Đồ họa Raylib ──
+    # ── 1. Cấu hình Cửa sổ cho phép Phóng to / Thu nhỏ & Resize ──
+    # Bật cờ FLAG_WINDOW_RESIZABLE trước khi init_window để mở khóa nút Ô Vuông (Maximize)
+    rl.set_config_flags(rl.FLAG_WINDOW_RESIZABLE)
     rl.init_window(SCREEN_WIDTH, SCREEN_HEIGHT, "Bloxorz 3D - AI Solver Edition")
+    if hasattr(rl, "set_window_min_size"):
+        rl.set_window_min_size(960, 600)
     rl.set_target_fps(60)
     rl.set_exit_key(0)  # Ngăn phím ESC tự động đóng cửa sổ
 
@@ -62,11 +67,13 @@ def main():
         dt = rl.get_frame_time()
         ctx.spin_timer += dt
         game = ctx.game
+        win_w = rl.get_screen_width()
+        win_h = rl.get_screen_height()
 
         # Cập nhật luồng nhạc nền liên tục
         update_music()
 
-        # Phím tắt toàn cục: [M] Bật/tắt nhạc nền, [K] Bật/tắt SFX, [B] Đổi Skin 3D
+        # Phím tắt toàn cục: [M] Nhạc nền, [K] SFX, [B] Đổi Skin, [F11] Toàn màn hình
         if rl.is_key_pressed(rl.KEY_M):
             toggle_bgm()
         if rl.is_key_pressed(rl.KEY_K):
@@ -74,6 +81,11 @@ def main():
         if rl.is_key_pressed(rl.KEY_B):
             current_skin_idx = ctx.cycle_skin(1)
             play_sfx("ui_select")
+        if rl.is_key_pressed(rl.KEY_F11):
+            if hasattr(rl, "toggle_borderless_windowed"):
+                rl.toggle_borderless_windowed()
+            elif hasattr(rl, "toggle_fullscreen"):
+                rl.toggle_fullscreen()
 
         # Giữ đồng bộ biến toàn cục current_skin_idx khi đổi bằng nút bấm trên UI
         current_skin_idx = ctx.current_skin_idx
@@ -120,12 +132,6 @@ def main():
                         else:
                             exit_tutorial_practice()
                             ctx.current_state = STATE_TUTORIAL_STAGE2
-                    elif rl.is_key_pressed(rl.KEY_R):
-                        play_sfx("reset")
-                        game.reset()
-                        ctx.reset_camera()
-                        ctx.roll_animating = False
-                        ctx.buffered_move = None
 
             # 2. Trạng thái THẤT BẠI
             elif game.status == "LOST" and not ctx.roll_animating:
@@ -261,13 +267,14 @@ def main():
 
         # ── B. Cập nhật Tọa độ Camera Orbital ──
         if ctx.current_state == STATE_MENU:
-            # Camera cho menu: target dịch sang trái để khối 3D ở nửa phải màn hình
+            # Camera cho menu: target dịch sang trái theo tỉ lệ khung hình để khối 3D ở nửa phải màn hình
             import math as _math
             _rad_yaw = _math.radians(ctx.cam_yaw)
             _rad_pitch = _math.radians(ctx.cam_pitch)
-            # Dịch camera target sang trái theo hướng nhìn để vật thể tại (0,0,0) hiện ở nửa phải
-            ctx.camera.target = rl.Vector3(-3.5, -0.5, 0.0)
-            _eye_x = -3.5 + ctx.cam_dist * _math.cos(_rad_pitch) * _math.sin(_rad_yaw)
+            aspect = float(win_w) / max(1.0, float(win_h))
+            shift_x = -3.5 * (aspect / 1.486)
+            ctx.camera.target = rl.Vector3(shift_x, -0.5, 0.0)
+            _eye_x = shift_x + ctx.cam_dist * _math.cos(_rad_pitch) * _math.sin(_rad_yaw)
             _eye_y = -0.5 + ctx.cam_dist * _math.sin(_rad_pitch)
             _eye_z = 0.0 + ctx.cam_dist * _math.cos(_rad_pitch) * _math.cos(_rad_yaw)
             ctx.camera.position = rl.Vector3(_eye_x, _eye_y, _eye_z)
@@ -278,9 +285,6 @@ def main():
         update_roll_animation(dt)
 
         # ── D. Render Khung hình ──
-        win_w = rl.get_screen_width()
-        win_h = rl.get_screen_height()
-
         rl.begin_drawing()
         rl.clear_background(BG_COLOR)
 

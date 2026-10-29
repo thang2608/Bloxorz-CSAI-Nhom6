@@ -150,13 +150,13 @@ def draw_2d_hud():
         ctx.ai_move_queue.clear()
         ctx.current_state = STATE_MENU
 
-    # Thanh điều khiển đáy màn hình (có bổ sung [B]: Đổi Skin)
-    bar_w = min(w - 30, 1020)
+    # Thanh điều khiển đáy màn hình (có bổ sung [B]: Đổi Skin & [F11]: Toàn màn hình)
+    bar_w = min(w - 30, 1040)
     bar_rect = rl.Rectangle(w // 2 - bar_w // 2, h - 46, bar_w, 34)
     rl.draw_rectangle_rounded(bar_rect, 0.45, 8, rl.Color(14, 28, 38, 215))
     rl.draw_rectangle_rounded_lines(bar_rect, 0.45, 8, rl.Color(65, 90, 110, 160))
 
-    ctrl_text = f"[W/A/S/D]: Lăn khối  ·  [B]: Đổi Skin  ·  [M]: Nhạc nền  ·  [H]: AI Giải ({cur_algo})  ·  [Tab]: Đổi AI  ·  [Z]: Hoàn tác  ·  [Space]: Đổi khối  ·  [R]: Chơi lại"
+    ctrl_text = f"[W/A/S/D]: Lăn khối  ·  [B]: Đổi Skin  ·  [F11]: Toàn màn hình  ·  [H]: AI ({cur_algo})  ·  [Tab]: Đổi AI  ·  [Z]: Hoàn tác  ·  [Space]: Đổi khối  ·  [R]: Chơi lại"
     ctrl_sz = 13
     text_w = measure_text_ui(ctrl_text, ctrl_sz, is_bold=False)
     while text_w > bar_w - 20 and ctrl_sz > 10:

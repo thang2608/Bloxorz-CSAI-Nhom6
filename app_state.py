@@ -52,11 +52,11 @@ class AppContext:
         self.show_solvers_dropdown = False
         self.solver_names = ["A*", "BFS", "DFS", "UCS"]
 
-        # 6. Hệ thống 6 Skin Khối 3D Cao Cấp
+        # 6. Hệ thống 4 Skin Khối 3D Đặc Đa Tầng
         self.current_skin_idx = 0
 
     def cycle_skin(self, step=1):
-        """Chuyển đổi qua lại giữa 6 Skin khối 3D"""
+        """Chuyển đổi qua lại giữa các Skin khối 3D"""
         self.current_skin_idx = (self.current_skin_idx + step) % len(BLOCK_SKINS)
         return self.current_skin_idx
 

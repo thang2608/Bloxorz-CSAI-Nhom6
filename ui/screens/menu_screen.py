@@ -1,8 +1,8 @@
 # ui/screens/menu_screen.py
 """
 Bloxorz 3D - Giao diện Màn hình Menu chính (DELUXE SPLIT-LAYOUT EDITION)
-Bố cục chia đôi: Trái = Thương hiệu & Nút điều hướng | Phải = Khối 3D xoay trưng bày & Bộ chọn 6 Skin 3D.
-Hỗ trợ điều hướng song song Bàn phím (↑/↓/W/S + Enter/Space + Phím B đổi Skin) & Chuột.
+Bố cục chia đôi: Trái = Thương hiệu & Nút điều hướng | Phải = Khối 3D xoay trưng bày & Bộ chọn 4 Skin 3D.
+Hỗ trợ điều hướng song song Bàn phím (↑/↓/W/S + Enter/Space + Phím B đổi Skin + F11 Toàn màn hình) & Chuột.
 """
 
 import sys
@@ -190,7 +190,7 @@ def draw_menu_3d_showcase(dt):
 
 
 def draw_menu_screen(w, h):
-    """Màn hình Menu chính Deluxe Split-Layout với điều hướng Bàn phím + Chuột & Bộ chọn 6 Skin 3D."""
+    """Màn hình Menu chính Deluxe Split-Layout với điều hướng Bàn phím + Chuột & Bộ chọn 4 Skin 3D."""
     global menu_selected_idx
 
     # ── Xử lý điều hướng bàn phím ──
@@ -319,7 +319,7 @@ def draw_menu_screen(w, h):
     # ══════════════════════════════════════════════════════════════════
     # THANH CHỈ DẪN ĐIỀU KHIỂN Ở GÓC DƯỚI BÊN TRÁI
     # ══════════════════════════════════════════════════════════════════
-    hint = "[↑/↓] hoặc [W/S]: Di chuyển  ·  [Enter]: Chọn  ·  [B]: Đổi Skin  ·  [M]: Nhạc nền"
+    hint = "[↑/↓] hoặc [W/S]: Di chuyển  ·  [Enter]: Chọn  ·  [B]: Đổi Skin  ·  [F11]: Toàn màn hình  ·  [M]: Nhạc"
     w_hint = measure_text_ui(hint, 12)
     hint_x = left_margin - 6
     hint_y = h - 55
