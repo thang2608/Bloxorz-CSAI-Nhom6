@@ -20,7 +20,6 @@ LEVELS = [
     # ─────────────────────────────────────────────
     {
         "id": 1,
-        "name": "Màn 1: Khởi đầu kinh điển",
         "description": "Lăn khối về lỗ đích màu xanh neon. Dùng W/A/S/D hoặc phím mũi tên.",
         "board": [
             [1, 1, 1, 0, 0, 0, 0, 0, 0, 0],
@@ -40,7 +39,6 @@ LEVELS = [
     # ─────────────────────────────────────────────
     {
         "id": 2,
-        "name": "Màn 2: Hành Lang Hiểm Trở",
         "description": "Lối đi hẹp 1-2 ô uốn lượn quanh vực thẳm. Phải căn chỉnh hướng lăn chính xác từng bước một!",
         "board": [
             # 0  1  2  3  4  5  6  7  8  9 10 11
@@ -62,7 +60,6 @@ LEVELS = [
     # ─────────────────────────────────────────────
     {
         "id": 3,
-        "name": "Màn 3: Bẫy Sàn Cam Chẵn Lẻ",
         "description": "Sàn cam dài ngăn cách 2 bờ vực. Tuyệt đối không được đứng thẳng trên ô cam!",
         "board": [
             # 0  1  2  3  4  5  6  7  8  9 10
@@ -84,7 +81,6 @@ LEVELS = [
     # ─────────────────────────────────────────────
     {
         "id": 4,
-        "name": "Màn 4: Cầu Hẹp Vực Thẳm",
         "description": "Bật công tắc tròn ở góc khuất mở cầu, sau đó xoay sở trên đảo hẹp để thẳng hàng bước qua cầu.",
         "board": [
             # 0  1  2  3  4  5  6  7  8  9 10 11
@@ -116,52 +112,63 @@ LEVELS = [
     # ─────────────────────────────────────────────
     {
         "id": 5,
-        "name": "Màn 14: Mê Cung Lượng Tử",
-        "description": "Thử thách cực khó: Kết hợp dải sàn cam hiểm trở và hệ thống cầu đảo chiều nghịch đảo.",
+        "description": "Bật công tắc tròn và khóa X nặng để đảo chiều các nhịp cầu, rồi bước lên công tắc tách khối. Hai khối nhỏ 1x1x1 đi được trên sàn cam, hãy đổi qua lại giữa chúng và gộp lại ở đích!",
+        # Lời giải ngắn nhất (61 thao tác, X = đổi khối đang điều khiển):
+        # DLURDDRRDRRRULLDLDRURDLUULLLDDRRRDRRRRRRRRRRUXDDRDRRRRRRRRRRD
+        # Tách khối ở thao tác thứ 28, gộp lại ở (3,14) ngay trước khi vào đích.
         "board": [
             # 0  1  2  3  4  5  6  7  8  9 10 11 12 13 14
             [1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0],  # Row 0: Start ở (0, 1)
-            [1, 3, 1, 0, 0, 0, 0, 1, 3, 3, 1, 0, 0, 0, 0],  # Row 1: Sàn cam tại (1, 1) và (1, 8..9)
-            [1, 3, 1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 0],  # Row 2
-            [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],  # Row 3
-            [0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 0],  # Row 4
-            [0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 2],  # Row 5: Đích ở (5, 14)
+            [1, 3, 1, 1, 0, 0, 0, 1, 3, 3, 1, 0, 0, 0, 0],  # Row 1: cam (1,1) = chỗ mini A xuất hiện; (1,3) = chỗ mini B xuất hiện
+            [1, 3, 1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 0],  # Row 2: công tắc tách khối ở (2, 2)
+            [0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 3, 1, 0, 0, 3],  # Row 3
+            [0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1],  # Row 4
+            [0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0, 2],  # Row 5: Đích ở (5, 14)
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],  # Row 6
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1],  # Row 7
         ],
         "start": (0, 1),
         "switches": [
             {
                 "id": "sw_quantum_1",
                 "type": "soft",
-                "pos": [2, 6], # Công tắc mềm giữa đường
+                "pos": [2, 6],  # Công tắc mềm giữa đường
                 "effects": [
                     {"action": "open", "bridge_id": 0},
-                    {"action": "close", "bridge_id": 1}
-                ]
+                    {"action": "close", "bridge_id": 1},
+                ],
             },
             {
                 "id": "sw_quantum_heavy",
                 "type": "heavy",
-                "pos": [4, 7], # Công tắc X nặng đòi hỏi đứng thẳng
+                "pos": [4, 7],  # Công tắc X nặng đòi hỏi đứng thẳng
                 "effects": [
                     {"action": "open", "bridge_id": 1},
-                    {"action": "open", "bridge_id": 2}
-                ]
-            }
+                    {"action": "open", "bridge_id": 2},
+                ],
+            },
+            {
+                "id": "sw_quantum_split",
+                "type": "split",
+                "pos": [2, 2],  # Đứng thẳng lên đây để tách thành 2 khối nhỏ
+                "split_to": [[1, 1], [1, 3]],
+                "effects": [],
+            },
         ],
         "bridges": {
             0: {
                 "tiles": [[3, 0], [3, 1], [3, 2], [3, 3]],
-                "initially_open": False
+                "initially_open": False,
             },
             1: {
                 "tiles": [[3, 5], [3, 6], [3, 7]],
-                "initially_open": True
+                "initially_open": True,
             },
             2: {
                 "tiles": [[4, 8], [4, 9], [4, 10], [4, 11], [4, 12]],
-                "initially_open": False
-            }
-        }
+                "initially_open": False,
+            },
+        },
     },
 
     # ─────────────────────────────────────────────
@@ -169,7 +176,6 @@ LEVELS = [
     # ─────────────────────────────────────────────
     {
         "id": 6,
-        "name": "Màn 6: Cực Hạn Luân Hồi & Vực Thẳm",
         "description": "Thử thách đỉnh cao 35 bước: Vượt đầm lầy cam, xoay quanh lỗ rỗng bấm khóa X nặng, mở cầu kép đảo chiều để về đích!",
         "board": [
             # 0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17
@@ -214,7 +220,6 @@ LEVELS = [
     # ─────────────────────────────────────────────
     {
         "id": 7,
-        "name": "Màn 7: Ba Cây Cầu",
         "description": "Bật công tắc để mở cầu, đứng thẳng lên công tắc X để mở cầu tiếp theo. Cẩn thận các ô cam dễ vỡ!",
         "board": [
             # 0  1  2  3  4  5  6  7  8  9 10 11 12 13 14
@@ -262,7 +267,6 @@ LEVELS = [
     # ─────────────────────────────────────────────
     {
         "id": 8,
-        "name": "Màn 8: Mê Cung Sàn Cam Vô Tận",
         "description": "Cả bản đồ rải đầy sàn cam dễ vỡ. Chỉ được đứng thẳng trên ô xám thường, hãy tìm nhịp lăn chính xác để tới lỗ đích!",
         "board": [
             [0, 1, 1, 1, 3, 1, 3, 1, 3, 1, 0, 0, 1],
@@ -285,7 +289,6 @@ LEVELS = [
     # ─────────────────────────────────────────────
     {
         "id": 9,
-        "name": "Màn 9: Hai Công Tắc Hai Nhịp Cầu",
         "description": "Hai công tắc tròn ở hai đầu bản đồ, mỗi cái mở một nhịp cầu. Phải đi vòng, bật đúng thứ tự rồi quay lại băng qua cầu.",
         "board": [
             [0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 1, 1],
@@ -312,7 +315,6 @@ LEVELS = [
     # ─────────────────────────────────────────────
     {
         "id": 10,
-        "name": "Màn 10: Khóa X Nặng & Đầm Lầy Cam",
         "description": "Công tắc tròn mở cầu thứ nhất, khóa X nặng (phải đứng thẳng) mở cầu thứ hai, giữa đường là sàn cam dễ vỡ.",
         "board": [
             [1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 3, 1, 0],
@@ -340,7 +342,6 @@ LEVELS = [
     # ─────────────────────────────────────────────
     {
         "id": 11,
-        "name": "Màn 11: Cầu Đảo Chiều Địa Ngục",
         "description": "Ba nhịp cầu, công tắc tròn vừa mở vừa đóng cầu khác, khóa X nặng và sàn cam. Sai một nhịp là phải làm lại!",
         "board": [
             [3, 1, 1, 1, 1, 3, 0, 1, 3, 1, 1, 1, 1, 1],
@@ -370,7 +371,6 @@ LEVELS = [
     # ─────────────────────────────────────────────
     {
         "id": 12,
-        "name": "Màn 12: Mê Cung Địa Ngục",
                 "description": "5 nhịp cầu đóng/mở đảo chiều, công tắc X nặng và sàn cam dễ vỡ. Mỗi nước đi đều có thể là nước đi cuối cùng!",
                 "board": [
                     # 0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15
