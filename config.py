@@ -22,17 +22,17 @@ STATE_TUTORIAL_PRACTICE = 6 # Đang thực hành bản đồ mini 3D
 # Danh sách tên 12 màn chơi tiếng Việt chuẩn có dấu
 LEVEL_NAMES_VI = [
     "Khởi Đầu Kinh Điển",
-    "Sàn Cam Dễ Vỡ",
-    "Cầu & Công Tắc Mềm",
-    "Công Tắc Nặng (Chữ X)",
-    "Phân Thân & Hợp Nhất",
-    "Cầu Kép Đảo Chiều",
-    "Thử Thách Bậc Thầy",
-    "Đảo Nổi & Hai Nhịp Cầu",
-    "Phân Thân Cách Trở",
-    "Ván Cờ Sàn Cam & Khóa X",
-    "Ba Cầu Liên Hoàn",
-    "Đỉnh Cao Đại Bậc Thầy"
+    "Hành Lang Hiểm Trở",
+    "Bẫy Sàn Cam Chẵn Lẻ",
+    "Cầu Hẹp Vực Thẳm",
+    "Mê Cung Lượng Tử & Phân Thân",
+    "Cực Hạn Luân Hồi & Vực Thẳm",
+    "Ba Cây Cầu",
+    "Mê Cung Sàn Cam Vô Tận",
+    "Hai Công Tắc Hai Nhịp Cầu",
+    "Khóa X Nặng & Đầm Lầy Cam",
+    "Cầu Đảo Chiều Địa Ngục",
+    "Mê Cung Địa Ngục"
 ]
 
 # Bảng mã ký tự ASCII + Tiếng Việt có dấu đầy đủ
