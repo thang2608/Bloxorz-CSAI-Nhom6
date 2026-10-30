@@ -55,6 +55,17 @@ class AppContext:
         # 6. Hệ thống 4 Skin Khối 3D Đặc Đa Tầng
         self.current_skin_idx = 0
 
+        # 7. Thông báo nổi trên màn hình (Toast Notification)
+        self.toast_message = ""
+        self.toast_timer = 0.0
+        self.toast_color = None
+
+    def show_toast(self, message, duration=2.5, color=None):
+        """Hiển thị thông báo nổi thoáng qua trên màn hình"""
+        self.toast_message = message
+        self.toast_timer = duration
+        self.toast_color = color
+
     def cycle_skin(self, step=1):
         """Chuyển đổi qua lại giữa các Skin khối 3D"""
         self.current_skin_idx = (self.current_skin_idx + step) % len(BLOCK_SKINS)

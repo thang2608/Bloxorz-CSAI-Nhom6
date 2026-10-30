@@ -40,8 +40,6 @@ def _check_button_menu(rec, btn_index):
     if hover:
         mouse_delta = rl.get_mouse_delta()
         if abs(mouse_delta.x) > 0.1 or abs(mouse_delta.y) > 0.1:
-            if menu_selected_idx != btn_index:
-                play_sfx("ui_nav")
             menu_selected_idx = btn_index
             _last_input_was_keyboard = False
         notify_hover(f"menu_item_{btn_index}")

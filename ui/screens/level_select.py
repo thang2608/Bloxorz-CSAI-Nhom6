@@ -25,17 +25,17 @@ def draw_level_select_screen(w, h):
     wsub = measure_text_ui(subtitle, 15)
     draw_text_ui(subtitle, w // 2 - wsub // 2, 84, 15, rl.Color(0, 235, 245, 220))
 
-    # Lưới 4 cột x 3 hàng = 12 màn
+    # Lưới 4 cột x 3 hàng = 12 màn (Co giãn tương thích mọi độ phân giải >= 960x600)
     cols = 4
     rows = 3
-    card_w = 230
-    card_h = 92
-    gap_x = 24
-    gap_y = 20
+    gap_x = 18 if w < 1050 else 24
+    gap_y = 16 if h < 700 else 20
+    card_w = min(230, (w - 60 - (cols - 1) * gap_x) // cols)
+    card_h = 90 if h < 700 else 92
 
     total_w = cols * card_w + (cols - 1) * gap_x
     start_x = w // 2 - total_w // 2
-    start_y = 135
+    start_y = 125 if h < 700 else 135
 
     for i in range(len(LEVELS)):
         col_idx = i % cols

@@ -171,6 +171,7 @@ def perform_move(move_dir):
 
     if res == "SPLIT" or ctx.game.last_event == "MERGE":
         ctx.roll_animating = False
+        ctx.buffered_move = None
         ctx.roll_angle = 0.0
         ctx.roll_y_offset = 0.0
         return
@@ -234,10 +235,16 @@ def update_roll_animation(dt):
                 p_fall = (p - 0.35) / 0.65
                 ctx.roll_angle = 90.0 + 130.0 * p_fall
                 ctx.roll_y_offset = -22.0 * (p_fall * p_fall)
-        elif lost_reason == "FRAGILE_BREAK":
-            ctx.roll_angle = 0.0
-            ctx.roll_y_offset = -20.0 * (p * p)
-        else:  # BRIDGE_CLOSED
+        elif lost_reason in ("FRAGILE_BREAK", "BRIDGE_CLOSED"):
+            if p <= 0.38:
+                e = p / 0.38
+                ctx.roll_angle = 90.0 * (e * e * (3.0 - 2.0 * e))
+                ctx.roll_y_offset = 0.0
+            else:
+                p_fall = (p - 0.38) / 0.62
+                ctx.roll_angle = 90.0
+                ctx.roll_y_offset = -22.0 * (p_fall * p_fall)
+        else:
             ctx.roll_angle = 0.0
             ctx.roll_y_offset = -20.0 * (p * p)
     elif status == "WON":

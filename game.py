@@ -1,6 +1,7 @@
 # game.py — Logic cốt lõi của game Bloxorz
 import copy
 from levels import LEVELS
+from config import LEVEL_NAMES_VI
 
 class Block:
     def __init__(self, r1, c1, r2=None, c2=None):
@@ -84,7 +85,13 @@ class BloxorzGame:
 
         self.current_level_data = level_data
         self.level_id = level_data.get("id", self.level_index + 1)
-        self.level_name = level_data.get("name", f"Màn {self.level_index + 1}")
+        name_val = level_data.get("name")
+        if not name_val or name_val.startswith("Màn "):
+            if self.level_index < len(LEVEL_NAMES_VI):
+                name_val = LEVEL_NAMES_VI[self.level_index]
+            else:
+                name_val = f"Màn {self.level_index + 1}"
+        self.level_name = name_val
         self.level_description = level_data.get("description", "")
         self.board = [row[:] for row in level_data["board"]]
         self.rows = len(self.board)

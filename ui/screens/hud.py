@@ -27,28 +27,29 @@ def draw_2d_hud():
     skin_accent = get_skin_accent_color(ctx.current_skin_idx, ctx.spin_timer)
 
     # Card thông tin góc trái (hiển thị cả tên màn, bước đi và tên Skin hiện tại)
-    card_rect = rl.Rectangle(24, 20, 355, 116)
+    card_w = min(320, max(280, w - 620))
+    card_rect = rl.Rectangle(20, 18, card_w, 114)
     rl.draw_rectangle_rounded(card_rect, 0.16, 8, rl.Color(14, 28, 38, 225))
     rl.draw_rectangle_rounded_lines(card_rect, 0.16, 8, rl.Color(0, 240, 245, 140))
 
     # Vệt phản chiếu ánh sáng thủy tinh (Glass highlight)
-    c_hl = rl.Rectangle(26, 22, 351, 38)
+    c_hl = rl.Rectangle(22, 20, card_w - 4, 36)
     rl.draw_rectangle_rounded(c_hl, 0.16, 8, rl.Color(255, 255, 255, 10))
 
-    draw_text_ui("BLOXORZ 3D", 40, 28, 22, rl.Color(255, 215, 80, 255), is_bold=True, shadow=True, glow=True, glow_color=rl.Color(255, 195, 50, 40))
+    draw_text_ui("BLOXORZ 3D", 34, 26, 21, rl.Color(255, 215, 80, 255), is_bold=True, shadow=True, glow=True, glow_color=rl.Color(255, 195, 50, 40))
     lvl_info = f"MÀN {game.level_index + 1:02d}  ·  {clean_name}"
     lvl_sz = 14
-    while measure_text_ui(lvl_info, lvl_sz, is_bold=True) > 315 and lvl_sz > 11:
+    while measure_text_ui(lvl_info, lvl_sz, is_bold=True) > (card_w - 36) and lvl_sz > 10:
         lvl_sz -= 1
-    draw_text_ui(lvl_info, 40, 56, lvl_sz, rl.Color(220, 240, 250, 255), is_bold=True)
-    draw_text_ui(f"BƯỚC ĐI: {game.moves}", 40, 78, 17, rl.Color(0, 240, 245, 255), is_bold=True, glow=True)
+    draw_text_ui(lvl_info, 34, 53, lvl_sz, rl.Color(220, 240, 250, 255), is_bold=True)
+    draw_text_ui(f"BƯỚC ĐI: {game.moves}", 34, 75, 16, rl.Color(0, 240, 245, 255), is_bold=True, glow=True)
 
     # Nhãn Skin hiện tại ngay trong thẻ thông tin góc trái
     skin_info_txt = f"SKIN: {cur_skin['name']} (B)"
     skin_sz = 12
-    while measure_text_ui(skin_info_txt, skin_sz, is_bold=True) > 320 and skin_sz > 10:
+    while measure_text_ui(skin_info_txt, skin_sz, is_bold=True) > (card_w - 36) and skin_sz > 10:
         skin_sz -= 1
-    draw_text_ui(skin_info_txt, 40, 104, skin_sz, skin_accent, is_bold=True)
+    draw_text_ui(skin_info_txt, 34, 100, skin_sz, skin_accent, is_bold=True)
 
     # ── [NÚT ĐỔI SKIN NHANH (B)] ─────────────────────────────────
     btn_skin = rl.Rectangle(w - 585, 24, 135, 40)
@@ -263,3 +264,18 @@ def draw_2d_hud():
         w2 = measure_text_ui(t2, 16, is_bold=False)
         draw_text_ui(t1, w // 2 - w1 // 2, h // 2 - 64, 32, col1, is_bold=True, shadow=True, glow=True)
         draw_text_ui(t2, w // 2 - w2 // 2, h // 2 - 18, 16, rl.Color(225, 240, 250, 255), is_bold=False)
+
+    # ── [THÔNG BÁO NỔI TOAST (AI / THÔNG ĐIỆP HỆ THỐNG)] ───────
+    if ctx.toast_timer > 0:
+        ctx.toast_timer -= rl.get_frame_time()
+        t_sz = 14
+        tw = measure_text_ui(ctx.toast_message, t_sz, is_bold=True)
+        toast_w = max(260, tw + 44)
+        toast_h = 36
+        toast_x = w // 2 - toast_w // 2
+        toast_y = 76
+        t_rect = rl.Rectangle(toast_x, toast_y, toast_w, toast_h)
+        col_accent = ctx.toast_color if ctx.toast_color is not None else rl.Color(0, 240, 245, 255)
+        rl.draw_rectangle_rounded(t_rect, 0.40, 8, rl.Color(12, 22, 32, 240))
+        rl.draw_rectangle_rounded_lines(t_rect, 0.40, 8, col_accent)
+        draw_text_ui(ctx.toast_message, toast_x + (toast_w - tw) // 2, toast_y + 9, t_sz, col_accent, is_bold=True)

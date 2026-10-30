@@ -20,6 +20,7 @@ LEVELS = [
     # ─────────────────────────────────────────────
     {
         "id": 1,
+        "name": "Khởi Đầu Kinh Điển",
         "description": "Lăn khối về lỗ đích màu xanh neon. Dùng W/A/S/D hoặc phím mũi tên.",
         "board": [
             [1, 1, 1, 0, 0, 0, 0, 0, 0, 0],
@@ -39,6 +40,7 @@ LEVELS = [
     # ─────────────────────────────────────────────
     {
         "id": 2,
+        "name": "Hành Lang Hiểm Trở",
         "description": "Lối đi hẹp 1-2 ô uốn lượn quanh vực thẳm. Phải căn chỉnh hướng lăn chính xác từng bước một!",
         "board": [
             # 0  1  2  3  4  5  6  7  8  9 10 11
@@ -60,6 +62,7 @@ LEVELS = [
     # ─────────────────────────────────────────────
     {
         "id": 3,
+        "name": "Bẫy Sàn Cam Chẵn Lẻ",
         "description": "Sàn cam dài ngăn cách 2 bờ vực. Tuyệt đối không được đứng thẳng trên ô cam!",
         "board": [
             # 0  1  2  3  4  5  6  7  8  9 10
@@ -81,6 +84,7 @@ LEVELS = [
     # ─────────────────────────────────────────────
     {
         "id": 4,
+        "name": "Cầu Hẹp Vực Thẳm",
         "description": "Bật công tắc tròn ở góc khuất mở cầu, sau đó xoay sở trên đảo hẹp để thẳng hàng bước qua cầu.",
         "board": [
             # 0  1  2  3  4  5  6  7  8  9 10 11
@@ -112,6 +116,7 @@ LEVELS = [
     # ─────────────────────────────────────────────
     {
         "id": 5,
+        "name": "Mê Cung Lượng Tử & Phân Thân",
         "description": "Bật công tắc tròn và khóa X nặng để đảo chiều các nhịp cầu, rồi bước lên công tắc tách khối. Hai khối nhỏ 1x1x1 đi được trên sàn cam, hãy đổi qua lại giữa chúng và gộp lại ở đích!",
         # Lời giải ngắn nhất (61 thao tác, X = đổi khối đang điều khiển):
         # DLURDDRRDRRRULLDLDRURDLUULLLDDRRRDRRRRRRRRRRUXDDRDRRRRRRRRRRD
@@ -176,6 +181,7 @@ LEVELS = [
     # ─────────────────────────────────────────────
     {
         "id": 6,
+        "name": "Cực Hạn Luân Hồi & Vực Thẳm",
         "description": "Thử thách đỉnh cao 35 bước: Vượt đầm lầy cam, xoay quanh lỗ rỗng bấm khóa X nặng, mở cầu kép đảo chiều để về đích!",
         "board": [
             # 0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17
@@ -220,6 +226,7 @@ LEVELS = [
     # ─────────────────────────────────────────────
     {
         "id": 7,
+        "name": "Ba Cây Cầu",
         "description": "Bật công tắc để mở cầu, đứng thẳng lên công tắc X để mở cầu tiếp theo. Cẩn thận các ô cam dễ vỡ!",
         "board": [
             # 0  1  2  3  4  5  6  7  8  9 10 11 12 13 14
@@ -267,6 +274,7 @@ LEVELS = [
     # ─────────────────────────────────────────────
     {
         "id": 8,
+        "name": "Mê Cung Sàn Cam Vô Tận",
         "description": "Cả bản đồ rải đầy sàn cam dễ vỡ. Chỉ được đứng thẳng trên ô xám thường, hãy tìm nhịp lăn chính xác để tới lỗ đích!",
         "board": [
             [0, 1, 1, 1, 3, 1, 3, 1, 3, 1, 0, 0, 1],
@@ -289,6 +297,7 @@ LEVELS = [
     # ─────────────────────────────────────────────
     {
         "id": 9,
+        "name": "Hai Công Tắc Hai Nhịp Cầu",
         "description": "Hai công tắc tròn ở hai đầu bản đồ, mỗi cái mở một nhịp cầu. Phải đi vòng, bật đúng thứ tự rồi quay lại băng qua cầu.",
         "board": [
             [0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 1, 1],
@@ -315,6 +324,7 @@ LEVELS = [
     # ─────────────────────────────────────────────
     {
         "id": 10,
+        "name": "Khóa X Nặng & Đầm Lầy Cam",
         "description": "Công tắc tròn mở cầu thứ nhất, khóa X nặng (phải đứng thẳng) mở cầu thứ hai, giữa đường là sàn cam dễ vỡ.",
         "board": [
             [1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 3, 1, 0],
@@ -342,6 +352,7 @@ LEVELS = [
     # ─────────────────────────────────────────────
     {
         "id": 11,
+        "name": "Cầu Đảo Chiều Địa Ngục",
         "description": "Ba nhịp cầu, công tắc tròn vừa mở vừa đóng cầu khác, khóa X nặng và sàn cam. Sai một nhịp là phải làm lại!",
         "board": [
             [3, 1, 1, 1, 1, 3, 0, 1, 3, 1, 1, 1, 1, 1],
@@ -371,7 +382,8 @@ LEVELS = [
     # ─────────────────────────────────────────────
     {
         "id": 12,
-                "description": "5 nhịp cầu đóng/mở đảo chiều, công tắc X nặng và sàn cam dễ vỡ. Mỗi nước đi đều có thể là nước đi cuối cùng!",
+        "name": "Mê Cung Địa Ngục",
+        "description": "5 nhịp cầu đóng/mở đảo chiều, công tắc X nặng và sàn cam dễ vỡ. Mỗi nước đi đều có thể là nước đi cuối cùng!",
                 "board": [
                     # 0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15
                     [1, 1, 1, 1, 0, 0, 0, 0, 1, 3, 1, 1, 3, 1, 0, 0],  # 0

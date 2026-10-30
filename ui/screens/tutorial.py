@@ -178,13 +178,14 @@ def exit_tutorial_practice():
             ctx.cam_yaw, ctx.cam_pitch, ctx.cam_dist = cy, cp, cd
             ctx.target_yaw, ctx.target_pitch, ctx.target_dist = cy, cp, cd
             ctx.main_game_camera = None
+    else:
+        ctx.reset_camera()
 
     ctx.roll_animating = False
     ctx.buffered_move = None
     ctx.roll_angle = 0.0
     ctx.roll_y_offset = 0.0
     ctx.ai_move_queue.clear()
-    ctx.reset_camera()
 
 
 def draw_tutorial_stage1(w, h):

@@ -4,8 +4,10 @@ Bloxorz 3D - Bộ điều khiển thuật toán AI (AI Controller)
 Kết nối trò chơi với các bộ giải thông minh (A*, BFS, DFS, IDS, UCS).
 """
 
+import pyray as rl
 from solvers import AVAILABLE_SOLVERS
 from app_state import ctx
+from audio_manager import play_sfx
 
 
 def trigger_ai_solve(algo_name=None):
@@ -33,12 +35,17 @@ def trigger_ai_solve(algo_name=None):
         ctx.ai_move_queue = list(result["moves"])
         ctx.ai_stats = result
         print(f"[{chosen_algo}] Đã tìm thấy {len(ctx.ai_move_queue)} bước! (Duyệt {result.get('nodes_expanded', 0)} trạng thái)")
+        ctx.show_toast(f"AI ({chosen_algo}): Tìm thấy {len(ctx.ai_move_queue)} bước!", 2.2, rl.Color(65, 245, 160, 255))
     else:
         print(f"[{chosen_algo}] Không tìm thấy đường đi tới đích!")
+        play_sfx("ui_back")
+        ctx.show_toast(f"AI ({chosen_algo}): Không tìm thấy đường giải từ vị trí này!", 3.0, rl.Color(255, 95, 95, 255))
 
 
 def cycle_solver():
     """Chuyển đổi tuần tự qua lại giữa các thuật toán có sẵn (A* -> BFS -> DFS -> ...)"""
     ctx.ai_move_queue.clear()  # Dừng AI hiện tại nếu đang chạy
     ctx.current_solver_idx = (ctx.current_solver_idx + 1) % len(ctx.solver_names)
-    print(f"[*] Đã chuyển sang thuật toán: {ctx.solver_names[ctx.current_solver_idx]}")
+    algo_name = ctx.solver_names[ctx.current_solver_idx]
+    print(f"[*] Đã chuyển sang thuật toán: {algo_name}")
+    ctx.show_toast(f"Thuật toán AI: {algo_name} (Tab)", 1.5, rl.Color(0, 240, 245, 255))
