@@ -1,0 +1,15 @@
+# ==============================================================================
+# Bloxorz 3D - AI Solver Edition (CSAI Nhóm 6)
+# ==============================================================================
+
+# --- Đồ họa 3D & Ứng dụng Game Chính ---
+raylib>=5.0.0
+
+# --- Giao diện Web API (Tùy chọn) ---
+Flask>=2.0.0
+
+# --- Benchmark, Phân tích & Xuất biểu đồ báo cáo ---
+numpy>=1.20.0
+pandas>=1.3.0
+matplotlib>=3.5.0
+seaborn>=0.11.0
