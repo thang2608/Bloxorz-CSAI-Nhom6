@@ -1,4 +1,4 @@
-# raylib_app.py
+# main.py
 """
 BLOXORZ 3D - AI SOLVER EDITION
 Điểm khởi chạy ứng dụng (Main Entry Point).

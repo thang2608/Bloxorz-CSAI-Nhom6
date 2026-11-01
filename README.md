@@ -49,7 +49,7 @@ Chương trình mô phỏng trò chơi giải đố Bloxorz trên không gian 3D
 ├── config.py                   # Cấu hình kích thước, màu sắc, tên màn chơi
 ├── game.py                     # Logic game Bloxorz
 ├── levels.py                   # Bản đồ và dữ liệu cấu hình 12 màn chơi
-├── raylib_app.py               # Điểm khởi chạy ứng dụng 3D chính
+├── main.py                     # Điểm khởi chạy ứng dụng 3D chính
 ├── requirements.txt            # Danh sách thư viện phụ thuộc
 └── README.md                   # Hướng dẫn sử dụng
 ```
@@ -87,10 +87,10 @@ pip install -r requirements.txt
 Chạy ứng dụng game 3D chính:
 
 ```bash
-python raylib_app.py
+python main.py
 ```
 
-*(Nếu hệ thống chưa trỏ `python` về Python 3, dùng `python3 raylib_app.py`)*
+*(Nếu hệ thống chưa trỏ `python` về Python 3, dùng `python3 main.py`)*
 
 ---
 
